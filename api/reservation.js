@@ -1,10 +1,3 @@
-const { createClient } = require('@supabase/supabase-js')
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-)
-
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -13,19 +6,35 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, prenom, email, telephone, service, date_rdv, heure_rdv, prix } = req.body
+  const { nom, prenom, email, service, date_rdv, heure_rdv, prix } = req.body
 
-  // Sauvegarder la réservation
-  const { error } = await supabase
-    .from('reservations')
-    .insert([{ cliente_email: email, cliente_nom: nom + ' ' + prenom, service, date_rdv, heure_rdv, prix, statut: 'confirmé', acompte_paye: false }])
-
-  if (error) return res.status(500).json({ error: error.message })
-
-  // Envoyer email de confirmation
-  await fetch('https://api.resend.com/emails', {
+  // Sauvegarder dans Supabase via REST
+  await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.RESEND_KEY}`, 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': process.env.SUPABASE_KEY,
+      'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+    },
+    body: JSON.stringify({
+      cliente_email: email,
+      cliente_nom: (nom || '') + ' ' + (prenom || ''),
+      service: service,
+      date_rdv: date_rdv,
+      heure_rdv: heure_rdv,
+      prix: prix,
+      statut: 'confirmé',
+      acompte_paye: false
+    })
+  })
+
+  // Envoyer email de confirmation via Resend
+  const emailRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_KEY}`,
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       from: 'onboarding@resend.dev',
       to: email,
@@ -33,7 +42,7 @@ module.exports = async (req, res) => {
       html: `
         <div style="font-family:sans-serif;max-width:500px;margin:0 auto">
           <h2 style="color:#c9a84c">Honey Locks 🍯</h2>
-          <p>Bonjour ${prenom},</p>
+          <p>Bonjour ${prenom || nom},</p>
           <p>Ton rendez-vous est confirmé !</p>
           <table style="width:100%;border-collapse:collapse">
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service}</td></tr>
@@ -48,6 +57,9 @@ module.exports = async (req, res) => {
       `
     })
   })
+
+  const result = await emailRes.json()
+  console.log('Resend result:', JSON.stringify(result))
 
   res.status(200).json({ success: true })
 }
