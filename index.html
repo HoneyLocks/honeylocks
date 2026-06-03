@@ -555,12 +555,31 @@ function toRecap(){
   goSub('vrecap',4);
 }
 function pay(){
-  /* ouvre PayPal (démo). En vrai : lien paypal.me/tonpseudo/montant */
+  /* ouvre PayPal */
   try{window.open(PAYPAL+'/'+S.acompte,'_blank');}catch(e){}
   S.rdv++;S.ac+=S.acompte;
   S.bookings.push({id:Date.now(),service:S.name+(S.size?' · '+S.size:''),slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed'});
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé. Acompte de '+S.acompte+'€ reçu. À très vite chez Honey Locks 🍯';
   refreshAdmin();goSub('vdone',4);
+  /* Envoi Supabase + email confirmation */
+  var email = document.getElementById('e-email').value.trim().toLowerCase();
+  var slotParts = S.slot ? S.slot.split(' ') : [];
+  var dateRdv = slotParts[0] || '';
+  var heureRdv = slotParts[1] || '';
+  fetch('/api/reservation', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      nom: S.quotedName || 'Cliente',
+      prenom: S.quotedName || 'Cliente',
+      email: email,
+      telephone: '',
+      service: S.name + (S.size ? ' · ' + S.size : ''),
+      date_rdv: dateRdv,
+      heure_rdv: heureRdv,
+      prix: S.price + '€'
+    })
+  }).catch(function(e){console.log('Erreur envoi reservation:', e)});
 }
 function resetRes(){S.id=null;S.type=null;S.slot=null;S.size=null;S.opts=[];S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});document.getElementById('b1').disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';goSub('v1',1)}
 
@@ -590,7 +609,27 @@ function refreshAdmin(){
   });
   document.getElementById('abk').innerHTML=b;
 }
-function sendQuote(id){var v=document.getElementById('q-'+id).value;if(!v)return;var r=S.reqs.filter(function(x){return x.id===id})[0];r.status='quoted';r.price=v;refreshAdmin()}
+function sendQuote(id){
+  var v=document.getElementById('q-'+id).value;
+  if(!v)return;
+  var r=S.reqs.filter(function(x){return x.id===id})[0];
+  r.status='quoted';r.price=v;refreshAdmin();
+  /* Envoyer le prix par mail */
+  if(r.email){
+    fetch('/api/devis',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nom: r.name || 'Cliente',
+        prenom: r.name || 'Cliente',
+        email: r.email,
+        service: 'Locks (' + r.count + ' locks)',
+        prix: v + '€',
+        message: r.notes || ''
+      })
+    }).catch(function(e){console.log('Erreur envoi devis:',e)});
+  }
+}
 function delBk(id){S.bookings=S.bookings.filter(function(x){return x.id!==id});S.rdv=Math.max(0,S.rdv-1);refreshAdmin()}
 refreshAdmin();
 </script>
