@@ -493,45 +493,23 @@ function goNewDevis(){initPhotos();goSub('vdevis',2)}
 function checkExisting(){document.getElementById('b-existing').disabled=!/.+@.+\..+/.test(document.getElementById('e-email').value)}
 function loginExisting(){
   var em=document.getElementById('e-email').value.trim().toLowerCase();
-  /* Démo : email "demo@honeylocks.fr" = cliente connue à 55€ */
-  var known={
-    'demo@honeylocks.fr':{name:'Aïcha',price:55},
-    'test@test.fr':{name:'Lucie',price:50}
-  };
   var res=document.getElementById('existing-result');
-  if(known[em]){
-    var cl=known[em];
-    S.price=cl.price;S.quotedName=cl.name;
-    res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+cl.name+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+cl.price+'€</strong>. Tu peux réserver ton créneau directement !</div>';
-    setTimeout(function(){buildSlots();goSub('vslot',3)},1800);
-  } else {
-    res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong style="color:var(--danger)">Email non reconnu.</strong><br>Tu n\'as pas encore de devis chez moi — <span style="color:var(--honey-light);cursor:pointer" onclick="goNewDevis()">clique ici pour en faire une demande</span>.</div>';
-  }
+  res.innerHTML='<div class="note" style="margin-top:0">Recherche en cours...</div>';
+  fetch('/api/client?email='+encodeURIComponent(em))
+    .then(function(r){return r.json()})
+    .then(function(data){
+      if(data && data.price){
+        S.price=data.price;S.quotedName=data.name||em.split('@')[0];
+        res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+data.price+'€</strong>. Tu peux réserver ton créneau directement !</div>';
+        setTimeout(function(){buildSlots();goSub('vslot',3)},1800);
+      } else {
+        res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Email non reconnu.</strong><br>Tu n\'as pas encore de devis chez moi — <a onclick="goNewDevis()" style="color:var(--honey);cursor:pointer">clique ici pour en faire une demande</a>.</div>';
+      }
+    })
+    .catch(function(){
+      res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Erreur réseau.</strong> Réessaie dans un instant.</div>';
+    });
 }
-function pickSize(el){document.querySelectorAll('#size-block .chip').forEach(function(c){c.classList.remove('selected')});el.classList.add('selected');S.size=el.dataset.size;document.getElementById('bopt').disabled=false}
-function toggleOpt(el){if(el.classList.contains('disabled'))return;el.classList.toggle('selected')}
-function fromOpt(){S.opts=[];S.optTotal=0;document.querySelectorAll('#vopt .opt-row.selected').forEach(function(o){S.opts.push({name:o.querySelector('.opt-name').textContent.replace(' (bientôt)','').trim(),price:parseInt(o.dataset.price)});S.optTotal+=parseInt(o.dataset.price)});S.price=S.base+S.optTotal;buildSlots();goSub('vslot',3)}
-
-/* PHOTOS */
-function initPhotos(){S.curPhotos=[];S.inspoPhotos=[];renderPhotos('cur');renderPhotos('inspo');checkDevis()}
-function renderPhotos(kind){
-  var arr=(kind==='cur')?S.curPhotos:S.inspoPhotos;
-  var max=3;var box=document.getElementById('photos-'+kind);var h='';
-  for(var i=0;i<max;i++){
-    if(arr[i]){h+='<div class="photo-slot filled"><img src="'+arr[i]+'"><div class="rm" onclick="rmPhoto(event,\''+kind+'\','+i+')">×</div></div>';}
-    else{h+='<div class="photo-slot" onclick="addPhoto(\''+kind+'\')"><div class="pic">📷</div>Ajouter</div>';break;}
-  }
-  box.innerHTML=h;
-}
-function addPhoto(kind){
-  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=function(){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var arr=(kind==='cur')?S.curPhotos:S.inspoPhotos;if(arr.length<3)arr.push(r.result);renderPhotos(kind);checkDevis()};r.readAsDataURL(f)};
-  inp.click();
-}
-function rmPhoto(e,kind,i){e.stopPropagation();var arr=(kind==='cur')?S.curPhotos:S.inspoPhotos;arr.splice(i,1);renderPhotos(kind);checkDevis()}
-function checkDevis(){var em=document.getElementById('d-email').value;var ok=(S.curPhotos.length>=1)&&/.+@.+\..+/.test(em);document.getElementById('bdevis').disabled=!ok}
-
-function submitDevis(){S.reqs.push({id:Date.now(),name:document.getElementById('d-insta').value||'cliente',email:document.getElementById('d-email').value||'',count:document.getElementById('d-count').value||'?',notes:document.getElementById('d-notes').value||'',photos:S.curPhotos.length,status:'pending',price:null});refreshAdmin();goSub('vdconf',2)}
 function simQuote(){S.price=65;buildSlots();goSub('vslot',3)}
 
 function buildSlots(){
