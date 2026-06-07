@@ -608,7 +608,7 @@ function buildSlots(){
     var avail=(S.slots[iso]||[]).filter(function(s){return s.on;});
     if(avail.length){
       h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
-      avail.forEach(function(s){h+='<div class="slot" onclick="pickSlot(this,''+label+'',''+s.time+'',''+iso+'')">'+s.time+'</div>';});
+      avail.forEach(function(s){h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';});
       h+='</div></div>';
     }
     d.setDate(d.getDate()+1);
@@ -702,15 +702,15 @@ function renderSlotsAdmin(){
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
     var slots=S.slots[iso]||[];
     h+='<div class="aday">';
-    h+='<div class="aday-h"><span>'+label+'</span><button class="aday-add" onclick="addSlotDay(''+iso+'')">+ créneau</button></div>';
+    h+='<div class="aday-h"><span>'+label+'<\/span><button class="aday-add" onclick="addSlotDay(\''+iso+'\')">+ créneau<\/button><\/div>';
     slots.forEach(function(s,j){
       h+='<div class="sitem">';
-      h+='<button class="stog '+(s.on?'on':'off')+'" onclick="toggleSlotDay(''+iso+'','+j+')">'+(s.on?'ON':'OFF')+'</button>';
-      h+='<input class="stime" type="text" value="'+s.time+'" maxlength="5" onchange="updateSlotDay(''+iso+'','+j+',this.value)">';
-      h+='<button class="sdel" onclick="removeSlotDay(''+iso+'','+j+')">×</button>';
-      h+='</div>';
+      h+='<button class="stog '+(s.on?'on':'off')+'" onclick="toggleSlotDay(\''+iso+'\','+j+')">'+(s.on?'ON':'OFF')+'<\/button>';
+      h+='<input class="stime" type="text" value="'+s.time+'" maxlength="5" onchange="updateSlotDay(\''+iso+'\','+j+',this.value)">';
+      h+='<button class="sdel" onclick="removeSlotDay(\''+iso+'\','+j+')">×<\/button>';
+      h+='<\/div>';
     });
-    h+='</div>';
+    h+='<\/div>';
     d.setDate(d.getDate()+1);
   }
   el.innerHTML=h;
@@ -719,6 +719,7 @@ function toggleSlotDay(iso,j){S.slots[iso][j].on=!S.slots[iso][j].on;renderSlots
 function updateSlotDay(iso,j,val){if(S.slots[iso]&&S.slots[iso][j])S.slots[iso][j].time=val.trim();}
 function removeSlotDay(iso,j){if(S.slots[iso]){S.slots[iso].splice(j,1);renderSlotsAdmin();}}
 function addSlotDay(iso){if(!S.slots[iso])S.slots[iso]=[];S.slots[iso].push({time:'',on:true});renderSlotsAdmin();}
+
 function sendQuote(id){
   var v=document.getElementById('q-'+id).value;
   if(!v)return;
