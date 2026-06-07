@@ -407,7 +407,6 @@ textarea{resize:vertical;min-height:66px}
   <!-- 2 devis confirm -->
   <div class="sv" id="vdconf">
     <div class="status"><div class="sicon pend">⏳</div><h3>Demande envoyée !</h3><p>Je regarde tes photos et je t'envoie ton devis très vite. Dès qu'il est validé, tu réserves tes RDV librement. 🍯</p></div>
-    <button class="btn" onclick="simQuote()">→ (Démo) Voir mon devis validé</button>
     <button class="btn ghost" onclick="resetRes()" style="margin-top:10px">Accueil réservation</button>
   </div>
 
@@ -587,11 +586,9 @@ function buildSlots(){
   var days=[];
   var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
   while(days.length<7){
-    if(d.getDay()!==0){
-      var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
-      var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      days.push({label:label,iso:iso});
-    }
+    var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
+    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    days.push({label:label,iso:iso});
     d=new Date(d);d.setDate(d.getDate()+1);
   }
   var h='';
@@ -646,7 +643,7 @@ function pay(){
 function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});document.getElementById('b1').disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';goSub('v1',1)}
 
 /* ADMIN */
-function openAdmin(){closeDrawer();refreshAdmin();document.getElementById('admin').classList.add('open')}
+function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();refreshAdmin();document.getElementById('admin').classList.add('open')}
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
 function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
 function refreshAdmin(){
