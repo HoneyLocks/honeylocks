@@ -707,7 +707,7 @@ function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
 function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
 function refreshAdmin(){
-  saveReqs();
+  saveReqs();saveBookings();
   var p=S.reqs.filter(function(r){return r.status==='pending'}).length;
   document.getElementById('st-p').textContent=p;document.getElementById('st-r').textContent=S.rdv;document.getElementById('st-c').textContent=S.ac+'€';
   var h='';
@@ -814,6 +814,10 @@ function sendRappel(id){
     else alert('Erreur : '+( d.error||'inconnue'));
   }).catch(function(){alert('Erreur réseau.');});
 }
+/* Persistence S.bookings via localStorage */
+function saveBookings(){
+  try{localStorage.setItem('hl_bookings',JSON.stringify(S.bookings));}catch(e){}
+}
 /* Persistence S.reqs via localStorage */
 function saveReqs(){
   try{localStorage.setItem('hl_reqs',JSON.stringify(S.reqs));}
@@ -823,6 +827,7 @@ function saveReqs(){
   }
 }
 try{var _r=localStorage.getItem('hl_reqs');if(_r){var _p=JSON.parse(_r);if(_p&&_p.length)S.reqs=_p;}}catch(e){}
+try{var _b=localStorage.getItem('hl_bookings');if(_b){var _bp=JSON.parse(_b);if(_bp&&_bp.length)S.bookings=_bp;}}catch(e){}
 refreshAdmin();
 </script>
 </body>
