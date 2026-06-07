@@ -97,7 +97,16 @@ module.exports = async (req, res) => {
           <p style="margin-top:16px">💵 Paiement le jour J en <strong>espèces uniquement</strong>.</p>
           <p>⚠️ L'acompte versé est <strong>non remboursable</strong>.</p>
           <p>Tu recevras l'adresse du salon la veille de ton rendez-vous.</p>
-          <p style="color:#999;font-size:12px">Honey Locks · Lyon · Disponible 7j/7</p>
+          <div style="margin-top:20px;background:#fff8e1;border-left:4px solid #c9a84c;border-radius:0 8px 8px 0;padding:14px 16px">
+            <p style="margin:0 0 8px;font-weight:700;color:#7a5c00;font-size:13px">📋 Consignes importantes</p>
+            <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">
+              <li>Cheveux propres et démêlés obligatoires le jour J</li>
+              <li>Si brushing non pris et cheveux non étirés : supplément de 10€ facturé</li>
+              <li>Retard de plus de 15 min : le créneau peut être annulé</li>
+              <li>Cheveux sales ou non démêlés : prestation annulée, acompte non remboursé</li>
+            </ul>
+          </div>
+          <p style="color:#999;font-size:12px;margin-top:16px">Honey Locks · Lyon · Disponible 7j/7</p>
         </div>
       `
     })
