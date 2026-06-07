@@ -238,6 +238,15 @@ textarea{resize:vertical;min-height:66px}
 .stog.off{background:rgba(255,255,255,.06);color:var(--dim)}
 .stime{flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-family:inherit;font-size:13px;text-align:center;min-width:0}
 .sdel{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.cal-day{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.cal-date{min-width:88px;font-size:11px;font-weight:600;color:var(--honey);letter-spacing:.3px;padding-top:3px;flex-shrink:0}
+.cal-date.empty{color:rgba(245,233,200,.2)}
+.cal-bks{flex:1;display:flex;flex-direction:column;gap:4px}
+.cal-bk{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.18);border-radius:8px;padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cal-time{color:var(--honey-light);font-weight:700;font-size:12px;flex-shrink:0}
+.cal-svc{color:var(--text);font-size:12px}
+.cal-who{color:var(--dim);font-size:11px}
+.cal-none{font-size:11px;color:rgba(245,233,200,.15);line-height:1;padding-top:3px}
 </style>
 </head>
 <body>
@@ -468,10 +477,12 @@ textarea{resize:vertical;min-height:66px}
   <div class="atabs">
     <button class="atab active" onclick="atab('quotes',this)">Devis</button>
     <button class="atab" onclick="atab('bookings',this)">Réservations</button>
+    <button class="atab" onclick="atab('cal',this)">Calendrier</button>
     <button class="atab" onclick="atab('slots',this)">Créneaux</button>
   </div>
   <div class="apanel active" id="ap-quotes"><div id="areq"></div></div>
   <div class="apanel" id="ap-bookings"><div id="abk"></div></div>
+  <div class="apanel" id="ap-cal"></div>
   <div class="apanel" id="ap-slots"></div>
 </div>
 
@@ -615,7 +626,7 @@ function simQuote(){S.price=65;buildSlots();goSub('vslot',3)}
 function initSlots(){
   var def=['10:30','14:30','18:30'];
   var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
-  for(var i=0;i<7;i++){
+  for(var i=0;i<30;i++){
     var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     if(!S.slots[iso])S.slots[iso]=def.map(function(t){return{time:t,on:true};});
     d.setDate(d.getDate()+1);
@@ -627,7 +638,7 @@ function buildSlots(){
   initSlots();
   var h='';
   var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
-  for(var i=0;i<7;i++){
+  for(var i=0;i<30;i++){
     var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
     var avail=(S.slots[iso]||[]).filter(function(s){return s.on;});
@@ -735,6 +746,36 @@ function refreshAdmin(){
   });
   document.getElementById('abk').innerHTML=b;
   renderSlotsAdmin();
+  renderCalAdmin();
+}
+function renderCalAdmin(){
+  var el=document.getElementById('ap-cal');
+  if(!el)return;
+  var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+  var h='';
+  var today=new Date();today.setHours(0,0,0,0);
+  for(var i=0;i<30;i++){
+    var d=new Date(today.getTime());d.setDate(today.getDate()+i);
+    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
+    var dayBks=S.bookings.filter(function(bk){return bk.slotIso===iso;});
+    dayBks.sort(function(a,b){return (a.slot||'').localeCompare(b.slot||'');});
+    var empty=dayBks.length===0;
+    h+='<div class="cal-day">';
+    h+='<div class="cal-date'+(empty?' empty':'')+'">'+label+'</div>';
+    h+='<div class="cal-bks">';
+    if(!empty){
+      dayBks.forEach(function(bk){
+        var time=(bk.slot||'').split(' à ')[1]||'';
+        h+='<div class="cal-bk"><span class="cal-time">'+time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+'</div>';
+      });
+    } else {
+      h+='<span class="cal-none">—</span>';
+    }
+    h+='</div></div>';
+  }
+  el.innerHTML=h;
 }
 function renderSlotsAdmin(){
   var el=document.getElementById('ap-slots');
@@ -744,7 +785,7 @@ function renderSlotsAdmin(){
   var moisFr=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
   var h='';
   var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
-  for(var i=0;i<7;i++){
+  for(var i=0;i<30;i++){
     var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
     var slots=S.slots[iso]||[];
