@@ -34,7 +34,7 @@ function buildIcs({ uid, summary, description, dtstart, dtend }) {
     'END:VEVENT',
     'END:VCALENDAR',
   ]
-  return lines.join('\r\n')
+  return lines.join('\r\n') + '\r\n'
 }
 
 module.exports = async (req, res) => {
@@ -163,7 +163,7 @@ module.exports = async (req, res) => {
       mailOpts.attachments = [{
         filename: 'rdv-honeylocks.ics',
         content: icsContent,
-        contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+        contentType: 'application/octet-stream',
       }]
     }
 
