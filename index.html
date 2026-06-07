@@ -488,6 +488,21 @@ function from1(){
   document.getElementById('bopt').disabled=(S.type==='size');
   goSub('vopt',2);
 }
+function pickSize(el){
+  document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('selected')});
+  el.classList.add('selected');S.size=el.dataset.size;
+  document.getElementById('bopt').disabled=false;
+}
+function toggleOpt(el){
+  if(el.classList.contains('disabled'))return;
+  el.classList.toggle('selected');
+  var key=el.dataset.opt,price=parseInt(el.dataset.price)||0;
+  var name=el.querySelector('.opt-name').textContent.trim();
+  if(el.classList.contains('selected')){S.opts.push({key:key,name:name,price:price});}
+  else{S.opts=S.opts.filter(function(o){return o.key!==key});}
+  S.optTotal=S.opts.reduce(function(sum,o){return sum+o.price},0);
+}
+function fromOpt(){S.price=S.base+S.optTotal;buildSlots();goSub('vslot',3);}
 function goExisting(){document.getElementById('e-email').value='';document.getElementById('existing-result').innerHTML='';document.getElementById('b-existing').disabled=false;goSub('vexisting',2)}
 function goNewDevis(){initPhotos();goSub('vdevis',2)}
 function initPhotos(){
