@@ -490,6 +490,59 @@ function from1(){
 }
 function goExisting(){document.getElementById('e-email').value='';document.getElementById('existing-result').innerHTML='';document.getElementById('b-existing').disabled=false;goSub('vexisting',2)}
 function goNewDevis(){initPhotos();goSub('vdevis',2)}
+function initPhotos(){
+  S.curPhotos=[];S.inspoPhotos=[];
+  document.getElementById('bdevis').textContent='Envoyer';
+  buildPhotoGrid('photos-cur',3);
+  buildPhotoGrid('photos-inspo',3);
+  checkDevis();
+}
+function buildPhotoGrid(id,max){
+  var c=document.getElementById(id);
+  function render(){
+    var arr=id==='photos-cur'?S.curPhotos:S.inspoPhotos;
+    var h='';
+    arr.forEach(function(src,i){h+='<div class="photo-slot filled"><img src="'+src+'"><div class="rm" onclick="rmPhoto(\''+id+'\','+i+')">×</div></div>';});
+    if(arr.length<max){h+='<div class="photo-slot" onclick="addPhoto(\''+id+'\','+max+')"><div class="pic">📷</div>Ajouter</div>';}
+    c.innerHTML=h;
+  }
+  c._render=render;render();
+}
+function addPhoto(id,max){
+  var arr=id==='photos-cur'?S.curPhotos:S.inspoPhotos;
+  if(arr.length>=max)return;
+  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    if(!inp.files[0])return;
+    var fr=new FileReader();
+    fr.onload=function(e){arr.push(e.target.result);var c=document.getElementById(id);if(c._render)c._render();checkDevis();};
+    fr.readAsDataURL(inp.files[0]);
+  };
+  inp.click();
+}
+function rmPhoto(id,i){
+  var arr=id==='photos-cur'?S.curPhotos:S.inspoPhotos;
+  arr.splice(i,1);
+  var c=document.getElementById(id);if(c._render)c._render();checkDevis();
+}
+function checkDevis(){
+  var valid=/.+@.+\..+/.test(document.getElementById('d-email').value)&&S.curPhotos.length>=1;
+  document.getElementById('bdevis').disabled=!valid;
+}
+function submitDevis(){
+  var btn=document.getElementById('bdevis');btn.disabled=true;btn.textContent='Envoi…';
+  var insta=document.getElementById('d-insta').value.trim()||'Cliente';
+  var email=document.getElementById('d-email').value.trim();
+  var count=document.getElementById('d-count').value.trim();
+  var notes=document.getElementById('d-notes').value.trim();
+  S.reqs.push({id:Date.now(),name:insta,count:count||'?',notes:notes,status:'pending',price:null,photos:S.curPhotos.length});
+  refreshAdmin();
+  fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nom:insta,prenom:'',email:email,service:S.name,prix:'sur devis',
+      message:(notes?notes+'\n':'')+(count?count+' locks':'')})
+  }).catch(function(){});
+  goSub('vdconf',2);
+}
 function checkExisting(){document.getElementById('b-existing').disabled=!/.+@.+\..+/.test(document.getElementById('e-email').value)}
 function loginExisting(){
   var em=document.getElementById('e-email').value.trim().toLowerCase();
