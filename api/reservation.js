@@ -7,6 +7,36 @@ function makeTransport() {
   })
 }
 
+// Construit une date iCal (YYYYMMDDTHHMMSS) à partir de "2026-06-08" + "10:30"
+function icsDate(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null
+  const d = dateStr.replace(/-/g, '')           // "20260608"
+  const t = timeStr.replace(':', '') + '00'      // "103000"
+  return d + 'T' + t
+}
+
+function buildIcs({ uid, summary, description, dtstart, dtend }) {
+  // Lignes iCal séparées par CRLF, encodage UTF-8
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Honey Locks//FR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:' + uid,
+    'DTSTAMP:' + dtstart,
+    'DTSTART:' + dtstart,
+    'DTEND:' + dtend,
+    'SUMMARY:' + summary,
+    'DESCRIPTION:' + description,
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ]
+  return lines.join('\r\n')
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -45,7 +75,7 @@ module.exports = async (req, res) => {
   console.log('Supabase reservation INSERT status:', sbRes.status)
   console.log('Supabase reservation INSERT response:', JSON.stringify(sbData))
 
-  // Envoyer email de confirmation via Resend
+  // Email de confirmation à la cliente
   try {
     const info = await makeTransport().sendMail({
       from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
@@ -76,8 +106,29 @@ module.exports = async (req, res) => {
     console.error('Email error:', e.message)
   }
 
+  // Notification à Maïna avec pièce jointe .ics
   try {
-    await makeTransport().sendMail({
+    const dtstart = icsDate(date_rdv, heure_rdv)
+
+    // Calcul DTEND = DTSTART + 2h
+    let dtend = dtstart
+    if (dtstart) {
+      const [datePart, timePart] = [dtstart.slice(0, 8), dtstart.slice(9, 15)]
+      const h = parseInt(timePart.slice(0, 2), 10) + 2
+      dtend = datePart + 'T' + String(h).padStart(2, '0') + timePart.slice(2)
+    }
+
+    const uid = 'honeylocks-' + Date.now() + '@honeylocks.vercel.app'
+    const clientLabel = nom ? '@' + nom : (email || 'Cliente')
+    const icsContent = dtstart ? buildIcs({
+      uid,
+      summary: (service || 'RDV') + ' — ' + clientLabel,
+      description: 'Cliente : ' + clientLabel + '\\nEmail : ' + (email || '—') + '\\nPrix : ' + prixNum + '€\\nAcompte : ' + acompteNum + '€',
+      dtstart,
+      dtend,
+    }) : null
+
+    const mailOpts = {
       from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
       to: process.env.GMAIL_USER,
       subject: '🔔 Nouvelle réservation — ' + (nom || email),
@@ -93,9 +144,20 @@ module.exports = async (req, res) => {
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prixNum}€</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${acompteNum}€</td></tr>
           </table>
+          ${icsContent ? '<p style="margin-top:16px;font-size:13px;color:#666">📅 Pièce jointe .ics — ouvre-la pour ajouter le RDV à ton calendrier.</p>' : ''}
         </div>
-      `
-    })
+      `,
+    }
+
+    if (icsContent) {
+      mailOpts.attachments = [{
+        filename: 'rdv-honeylocks.ics',
+        content: icsContent,
+        contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+      }]
+    }
+
+    await makeTransport().sendMail(mailOpts)
   } catch (e) {
     console.error('Notif email error:', e.message)
   }
