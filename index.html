@@ -623,23 +623,30 @@ function loginExisting(){
 }
 function simQuote(){S.price=65;buildSlots();goSub('vslot',3)}
 
-function initSlots(){
+function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function initSlotsForRange(start,end){
   var def=['10:30','14:30','18:30'];
-  var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
-  for(var i=0;i<30;i++){
-    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    if(!S.slots[iso])S.slots[iso]=def.map(function(t){return{time:t,on:true};});
-    d.setDate(d.getDate()+1);
-  }
+  var d=new Date(start.getTime());
+  while(d<=end){var iso=isoFmt(d);if(!S.slots[iso])S.slots[iso]=def.map(function(t){return{time:t,on:true};});d.setDate(d.getDate()+1);}
+}
+function initSlots(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var start=new Date(today);start.setDate(today.getDate()+1);
+  var end=new Date(today.getFullYear(),today.getMonth()+2,0);
+  initSlotsForRange(start,end);
 }
 function buildSlots(){
   var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   var moisFr=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  initSlots();
+  var today=new Date();today.setHours(0,0,0,0);
+  var start=new Date(today);start.setDate(today.getDate()+1);
+  var endMonth=new Date(today.getFullYear(),today.getMonth()+1,0);
+  if(today.getDate()>=25){endMonth=new Date(today.getFullYear(),today.getMonth()+2,0);}
+  initSlotsForRange(start,endMonth);
   var h='';
-  var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
-  for(var i=0;i<30;i++){
-    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var d=new Date(start.getTime());
+  while(d<=endMonth){
+    var iso=isoFmt(d);
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
     var avail=(S.slots[iso]||[]).filter(function(s){return s.on;});
     if(avail.length){
@@ -649,7 +656,7 @@ function buildSlots(){
     }
     d.setDate(d.getDate()+1);
   }
-  document.getElementById('slots').innerHTML=h;
+  document.getElementById('slots').innerHTML=h||'<div class="note" style="text-align:center;border-left:none;background:rgba(201,168,76,.07);border-radius:10px;padding:22px;line-height:1.8">Aucun créneau disponible pour le moment, reviens bientôt 🍯</div>';
   var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=S.name+extra+' · '+S.price+'€';
   document.getElementById('bslot').disabled=true;
 }
@@ -777,16 +784,26 @@ function renderCalAdmin(){
   }
   el.innerHTML=h;
 }
+var _aCalYear=new Date().getFullYear(),_aCalMonth=new Date().getMonth();
+function prevCalMonth(){_aCalMonth--;if(_aCalMonth<0){_aCalMonth=11;_aCalYear--;}renderSlotsAdmin();}
+function nextCalMonth(){_aCalMonth++;if(_aCalMonth>11){_aCalMonth=0;_aCalYear++;}renderSlotsAdmin();}
 function renderSlotsAdmin(){
   var el=document.getElementById('ap-slots');
   if(!el)return;
-  initSlots();
   var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  var moisFrLong=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   var moisFr=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  var h='';
-  var d=new Date();d.setDate(d.getDate()+1);d.setHours(0,0,0,0);
-  for(var i=0;i<30;i++){
-    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var firstDay=new Date(_aCalYear,_aCalMonth,1);
+  var lastDay=new Date(_aCalYear,_aCalMonth+1,0);
+  initSlotsForRange(firstDay,lastDay);
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">';
+  h+='<button class="aday-add" onclick="prevCalMonth()" style="padding:5px 16px;font-size:18px">&#8249;</button>';
+  h+='<span style="font-size:14px;font-weight:600;color:var(--honey-light)">'+moisFrLong[_aCalMonth]+' '+_aCalYear+'</span>';
+  h+='<button class="aday-add" onclick="nextCalMonth()" style="padding:5px 16px;font-size:18px">&#8250;</button>';
+  h+='</div>';
+  var d=new Date(firstDay.getTime());
+  while(d<=lastDay){
+    var iso=isoFmt(d);
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
     var slots=S.slots[iso]||[];
     h+='<div class="aday">';
@@ -795,7 +812,7 @@ function renderSlotsAdmin(){
       h+='<div class="sitem">';
       h+='<button class="stog '+(s.on?'on':'off')+'" onclick="toggleSlotDay(\''+iso+'\','+j+')">'+(s.on?'ON':'OFF')+'<\/button>';
       h+='<input class="stime" type="text" value="'+s.time+'" maxlength="5" onchange="updateSlotDay(\''+iso+'\','+j+',this.value)">';
-      h+='<button class="sdel" onclick="removeSlotDay(\''+iso+'\','+j+')">×<\/button>';
+      h+='<button class="sdel" onclick="removeSlotDay(\''+iso+'\','+j+')">&#215;<\/button>';
       h+='<\/div>';
     });
     h+='<\/div>';
