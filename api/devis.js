@@ -9,12 +9,13 @@ module.exports = async (req, res) => {
   const { nom, prenom, email, service, prix, message } = req.body
 
   // Sauvegarder dans Supabase via REST
-  await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
+  const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'apikey': process.env.SUPABASE_KEY,
-      'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+      'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+      'Prefer': 'return=representation'
     },
     body: JSON.stringify({
       cliente_email: email,
@@ -24,6 +25,14 @@ module.exports = async (req, res) => {
       statut: 'devis'
     })
   })
+
+  const sbData = await sbRes.json()
+  console.log('Supabase INSERT status:', sbRes.status)
+  console.log('Supabase INSERT response:', JSON.stringify(sbData))
+
+  if (sbRes.status >= 400) {
+    return res.status(500).json({ error: 'Supabase insert failed', detail: sbData })
+  }
 
   // Envoyer email via Resend
   const emailRes = await fetch('https://api.resend.com/emails', {
