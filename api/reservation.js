@@ -6,8 +6,11 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, prenom, email, service, date_rdv, heure_rdv, prix } = req.body
+  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte } = req.body
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
+  const prixNum = parseFloat(prixStr) || 0
+  const acompteNum = parseFloat(acompte) || 0
+  const resteNum = Math.max(0, prixNum - acompteNum)
 
   // Sauvegarder dans Supabase via REST
   const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
@@ -53,9 +56,12 @@ module.exports = async (req, res) => {
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv}</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prix}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>${prixNum}€</strong></td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte payé</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;font-size:17px"><strong>${resteNum}€</strong></td></tr>
           </table>
-          <p style="margin-top:20px">⚠️ L'acompte versé est <strong>non remboursable</strong>.</p>
+          <p style="margin-top:16px">💵 Paiement le jour J en <strong>espèces uniquement</strong>.</p>
+          <p>⚠️ L'acompte versé est <strong>non remboursable</strong>.</p>
           <p>Tu recevras l'adresse du salon la veille de ton rendez-vous.</p>
           <p style="color:#999;font-size:12px">Honey Locks · Lyon · Disponible 7j/7</p>
         </div>

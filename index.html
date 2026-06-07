@@ -636,7 +636,8 @@ function pay(){
       service: S.name + (S.size ? ' · ' + S.size : ''),
       date_rdv: dateRdv,
       heure_rdv: heureRdv,
-      prix: S.price + '€'
+      prix: S.price + '€',
+      acompte: S.acompte + '€'
     })
   }).catch(function(e){console.log('Erreur envoi reservation:', e)});
 }
