@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c;font-size:18px"><strong>${prixStr}€</strong></td></tr>
         </table>
         ${message ? `<p style="margin-top:16px;padding:12px;background:#f9f9f9;border-radius:8px">${message}</p>` : ''}
-        <p style="margin-top:20px">Maintenant que tu as ton devis, tu peux réserver ton créneau directement ici 👉 <a href="https://honeylocks.vercel.app">https://honeylocks.vercel.app</a></p>
+        <p style="margin-top:20px">Maintenant que tu as ton devis, tu peux réserver ton créneau directement ici 👉 <a href="https://honeylocks.fr">https://honeylocks.fr</a></p>
         <p style="color:#999;font-size:12px">Honey Locks · Lyon · Disponible 7j/7</p>
       </div>`
     : `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
@@ -94,7 +94,7 @@ module.exports = async (req, res) => {
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
               ${message ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Message</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${message}</td></tr>` : ''}
             </table>
-            <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.vercel.app">honeylocks.vercel.app</a> pour envoyer le devis.</p>
+            <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.fr">honeylocks.fr</a> pour envoyer le devis.</p>
           </div>
         `
       })
