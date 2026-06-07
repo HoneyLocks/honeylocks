@@ -654,7 +654,7 @@ function refreshAdmin(){
     h+='<div class="req '+r.status+'"><div class="rqh"><span class="rqn">@'+r.name+'</span><span class="rqs '+r.status+'">'+(r.status==='pending'?'À traiter':'Devis envoyé')+'</span></div>';
     h+='<div class="rqd">🔢 '+r.count+' locks</div>';
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
-    if(r.photos&&r.photos.length){h+='<div class="rqd">🖼 '+r.photos.length+' photo(s)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">';r.photos.forEach(function(src){h+='<img src="'+src+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';});h+='</div>';}
+    if(r.photos&&r.photos.length){h+='<div class="rqd">🖼 '+r.photos.length+' photo(s)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">';r.photos.forEach(function(src){h+='<img src="'+src+'" style="width:170px;height:170px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">';});h+='</div>';}
     if(r.notes)h+='<div class="rqd">📝 '+r.notes+'</div>';
     if(r.status==='pending')h+='<div class="qin"><input type="number" id="q-'+r.id+'" placeholder="Prix €" inputmode="numeric"><button onclick="sendQuote('+r.id+')">Envoyer</button></div>';
     else h+='<div class="rqd" style="color:var(--success)">✓ Devis : '+r.price+'€ — peut réserver librement</div>';
