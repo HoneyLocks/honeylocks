@@ -1,3 +1,12 @@
+const nodemailer = require('nodemailer')
+
+function makeTransport() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+  })
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -58,22 +67,17 @@ module.exports = async (req, res) => {
         <p style="color:#999;font-size:12px">Honey Locks · Lyon · Disponible 7j/7</p>
       </div>`
 
-  const emailRes = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.RESEND_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from: 'onboarding@resend.dev',
+  try {
+    const info = await makeTransport().sendMail({
+      from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: isQuote ? '🍯 Ton devis Honey Locks' : '🍯 Demande reçue — Honey Locks',
       html: htmlBody
     })
-  })
-
-  const result = await emailRes.json()
-  console.log('Resend result:', JSON.stringify(result))
+    console.log('Email sent:', info.messageId)
+  } catch (e) {
+    console.error('Email error:', e.message)
+  }
 
   res.status(200).json({ success: true })
 }
