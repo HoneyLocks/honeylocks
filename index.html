@@ -616,7 +616,10 @@ function toRecap(){
 }
 function pay(){
   /* ouvre PayPal */
-  try{window.open(PAYPAL+'/'+S.acompte,'_blank');}catch(e){}
+  var ppName=S.quotedName||document.getElementById('d-insta').value.trim()||'Cliente';
+  var ppNote=encodeURIComponent('Acompte @'+ppName+' – '+(S.slot||'RDV'));
+  var ppUrl=PAYPAL+'/'+S.acompte+'?locale.x=fr_FR&note='+ppNote;
+  try{window.open(ppUrl,'_blank');}catch(e){}
   S.rdv++;S.ac+=S.acompte;
   S.bookings.push({id:Date.now(),service:S.name+(S.size?' · '+S.size:''),slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed'});
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé. Acompte de '+S.acompte+'€ reçu. À très vite chez Honey Locks 🍯';
