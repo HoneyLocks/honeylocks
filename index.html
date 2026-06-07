@@ -360,10 +360,10 @@ textarea{resize:vertical;min-height:66px}
     </div>
     <div id="vanille-block" style="display:none">
       <label>Options en plus</label>
-      <div class="opt-row" data-opt="brushing" data-price="10" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
       <div class="opt-row disabled" data-opt="shampoing" data-price="20"><div><div class="opt-name">Shampoing <span style="color:var(--soon);font-size:11px">(bientôt)</span></div><div class="opt-price">+20€</div></div><div class="opt-check">✓</div></div>
     </div>
     <label>Supplément</label>
+    <div class="opt-row" data-opt="brushing" data-price="10" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
     <div class="opt-row" data-opt="long" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
     <div class="brow"><button class="btn ghost" onclick="back1()">Retour</button><button class="btn" id="bopt" onclick="fromOpt()">Continuer</button></div>
   </div>
@@ -428,6 +428,16 @@ textarea{resize:vertical;min-height:66px}
     <div class="brow"><button class="btn ghost" onclick="back1()">Retour</button><button class="btn" id="bslot" disabled onclick="toRecap()">Continuer</button></div>
   </div>
 
+  <!-- 3b coordonnées (parcours normal) -->
+  <div class="sv" id="vclient">
+    <h2>Tes coordonnées</h2><p class="sub">Pour recevoir ta confirmation de RDV 🍯</p>
+    <label>Instagram</label>
+    <div class="ig-wrap"><span class="at">@</span><input type="text" id="c-insta" placeholder="@ton_instagram"></div>
+    <label>Email <span class="lopt">(confirmation de réservation)</span></label>
+    <input type="email" id="c-email" placeholder="ton@email.com" inputmode="email" oninput="checkClient()">
+    <div class="brow"><button class="btn ghost" onclick="goSub(\'vslot\',3)">Retour</button><button class="btn" id="bclient" disabled onclick="fromClient()">Continuer</button></div>
+  </div>
+
   <!-- 4 recap -->
   <div class="sv" id="vrecap">
     <h2>Récapitulatif</h2><p class="sub">Verse ton acompte pour bloquer le créneau</p>
@@ -468,7 +478,7 @@ textarea{resize:vertical;min-height:66px}
 <script>
 var ACOMPTE_PROMO=5,ACOMPTE_DEVIS=20;
 var PAYPAL='https://www.paypal.me/loveloveleM'; /* lien PayPal.me de Maïna */
-var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,acompte:5,slot:null,slotIso:null,
+var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,acompte:5,slot:null,slotIso:null,clientInsta:null,clientEmail:null,
   curPhotos:[],inspoPhotos:[],
   reqs:[{id:1,name:'aicha_lks',count:140,notes:'Locks mi-longues',status:'pending',price:null}],
   bookings:[],rdv:0,ac:0,slots:{}};
@@ -620,10 +630,26 @@ function buildSlots(){
 }
 function pickSlot(el,day,time,iso){document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected')});el.classList.add('selected');S.slot=day+' à '+time;S.slotIso=iso||null;document.getElementById('bslot').disabled=false}
 function toRecap(){
+  if(S.type!=='devis'){
+    document.getElementById('c-insta').value='';
+    document.getElementById('c-email').value='';
+    document.getElementById('bclient').disabled=true;
+    goSub('vclient',4);return;
+  }
+  _buildRecap();
+}
+function checkClient(){document.getElementById('bclient').disabled=!/.+@.+\..+/.test(document.getElementById('c-email').value);}
+function fromClient(){
+  S.clientInsta=document.getElementById('c-insta').value.trim();
+  S.clientEmail=document.getElementById('c-email').value.trim().toLowerCase();
+  _buildRecap();
+}
+function _buildRecap(){
   var h='<div class="rrow"><span>Prestation</span><span class="v">'+S.name+'</span></div>';
   if(S.size)h+='<div class="rrow"><span>Taille</span><span class="v">'+S.size+'</span></div>';
   S.opts.forEach(function(o){h+='<div class="rrow"><span>+ '+o.name+'</span><span class="v">+'+o.price+'€</span></div>'});
   h+='<div class="rrow"><span>Créneau</span><span class="v">'+S.slot+'</span></div>';
+  if(S.clientInsta)h+='<div class="rrow"><span>Instagram</span><span class="v">@'+S.clientInsta+'</span></div>';
   h+='<div class="rrow"><span>Prix total</span><span class="v">'+S.price+'€</span></div>';
   h+='<div class="rrow"><span>Acompte PayPal</span><span class="rtotal">'+S.acompte+'€</span></div>';
   h+='<div class="rrow"><span>Reste le jour J</span><span class="v">'+(S.price-S.acompte)+'€</span></div>';
@@ -632,36 +658,35 @@ function toRecap(){
   goSub('vrecap',4);
 }
 function pay(){
-  /* ouvre PayPal */
-  var ppName=S.quotedName||document.getElementById('d-insta').value.trim()||'Cliente';
+  var ppName=S.clientInsta||S.quotedName||'Cliente';
   var ppNote=encodeURIComponent('Acompte @'+ppName+' – '+(S.slot||'RDV'));
   var ppUrl=PAYPAL+'/'+S.acompte+'?locale.x=fr_FR&note='+ppNote;
   try{window.open(ppUrl,'_blank');}catch(e){}
   S.rdv++;S.ac+=S.acompte;
-  S.bookings.push({id:Date.now(),service:S.name+(S.size?' · '+S.size:''),slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed'});
+  var bkEmail=S.clientEmail||document.getElementById('e-email').value.trim().toLowerCase();
+  var bkNom=S.clientInsta||S.quotedName||'Cliente';
+  S.bookings.push({id:Date.now(),service:S.name+(S.size?' · '+S.size:''),slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail});
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé. Acompte de '+S.acompte+'€ reçu. À très vite chez Honey Locks 🍯';
   refreshAdmin();goSub('vdone',4);
-  /* Envoi Supabase + email confirmation */
-  var email = document.getElementById('e-email').value.trim().toLowerCase();
-  var heureRdv = S.slot ? S.slot.split(' à ')[1] || '' : '';
-  var dateRdv = S.slotIso || null;
-  fetch('/api/reservation', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      nom: S.quotedName || 'Cliente',
-      prenom: S.quotedName || 'Cliente',
-      email: email,
-      telephone: '',
-      service: S.name + (S.size ? ' · ' + S.size : ''),
-      date_rdv: dateRdv,
-      heure_rdv: heureRdv,
-      prix: S.price + '€',
-      acompte: S.acompte + '€'
+  var heureRdv=S.slot?S.slot.split(' à ')[1]||'':'';
+  var dateRdv=S.slotIso||null;
+  fetch('/api/reservation',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      nom:bkNom,
+      prenom:bkNom,
+      email:bkEmail,
+      telephone:'',
+      service:S.name+(S.size?' · '+S.size:''),
+      date_rdv:dateRdv,
+      heure_rdv:heureRdv,
+      prix:S.price+'€',
+      acompte:S.acompte+'€'
     })
-  }).catch(function(e){console.log('Erreur envoi reservation:', e)});
+  }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
-function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});document.getElementById('b1').disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';goSub('v1',1)}
+function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.clientInsta=null;S.clientEmail=null;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});document.getElementById('b1').disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';goSub('v1',1)}
 
 /* ADMIN */
 function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();refreshAdmin();document.getElementById('admin').classList.add('open')}
@@ -685,7 +710,11 @@ function refreshAdmin(){
   var b='';
   if(!S.bookings.length)b='<div class="empty">Aucune réservation pour le moment.</div>';
   S.bookings.slice().reverse().forEach(function(bk){
-    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bk.slot+' · '+bk.price+'€ · acompte '+bk.acompte+'€ reçu</div><div class="bk-actions"><button class="bk-ok">Présence confirmée</button><button class="bk-del" onclick="delBk('+bk.id+')">Annuler</button></div></div>';
+    var bkMeta=bk.slot+' · '+bk.price+'€ · acompte '+bk.acompte+'€ reçu';
+    var bkExtra='';
+    if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
+    if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
+    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">Présence confirmée</button><button class="bk-del" onclick="delBk('+bk.id+')">Annuler</button></div></div>';
   });
   document.getElementById('abk').innerHTML=b;
   renderSlotsAdmin();
