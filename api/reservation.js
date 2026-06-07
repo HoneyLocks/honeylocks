@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { nom, prenom, email, service, date_rdv, heure_rdv, prix } = req.body
-  const prixNum = prix ? parseFloat(prix.toString().replace('€', '').trim()) : null
+  const prixStr = prix ? prix.toString().replace('€', '').trim() : null
 
   // Sauvegarder dans Supabase via REST
   const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
@@ -20,17 +20,18 @@ module.exports = async (req, res) => {
     },
     body: JSON.stringify({
       cliente_email: email,
-      cliente_nom: (nom || '') + ' ' + (prenom || ''),
+      cliente_nom: ((nom || '') + ' ' + (prenom || '')).trim(),
       service: service,
-      date_rdv: date_rdv,
-      heure_rdv: heure_rdv,
-      prix: isNaN(prixNum) ? null : prixNum,
+      date_rdv: date_rdv || null,
+      heure_rdv: heure_rdv || null,
+      prix: prixStr,
       statut: 'confirmé',
       acompte_paye: false
     })
   })
+  const sbData = await sbRes.json()
   console.log('Supabase reservation INSERT status:', sbRes.status)
-  console.log('Supabase reservation INSERT response:', JSON.stringify(await sbRes.json()))
+  console.log('Supabase reservation INSERT response:', JSON.stringify(sbData))
 
   // Envoyer email de confirmation via Resend
   const emailRes = await fetch('https://api.resend.com/emails', {

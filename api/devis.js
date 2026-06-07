@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { nom, prenom, email, service, prix, message } = req.body
-  const prixNum = prix ? parseFloat(prix.toString().replace('€', '').trim()) : null
+  const prixStr = prix ? prix.toString().replace('€', '').trim() : null
 
   // Sauvegarder dans Supabase via REST
   const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
@@ -20,9 +20,9 @@ module.exports = async (req, res) => {
     },
     body: JSON.stringify({
       cliente_email: email,
-      cliente_nom: (nom || '') + ' ' + (prenom || ''),
+      cliente_nom: ((nom || '') + ' ' + (prenom || '')).trim(),
       service: service,
-      prix: isNaN(prixNum) ? null : prixNum,
+      prix: prixStr,
       statut: 'devis'
     })
   })
