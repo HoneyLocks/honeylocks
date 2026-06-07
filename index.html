@@ -600,6 +600,14 @@ function toRecap(){
   document.getElementById('pp-amount').textContent=S.acompte+'€';
   goSub('vrecap',4);
 }
+function parseDateFr(str){
+  var mois={janvier:'01','février':'02','fevrier':'02',mars:'03',avril:'04',mai:'05',juin:'06',juillet:'07','août':'08','aout':'08',septembre:'09',octobre:'10',novembre:'11','décembre':'12','decembre':'12'};
+  var p=str.trim().split(' ');
+  var j=(p[1]||'').replace(/\D/g,'').padStart(2,'0');
+  var m=mois[(p[2]||'').toLowerCase()]||'';
+  if(!j||!m)return null;
+  return new Date().getFullYear()+'-'+m+'-'+j;
+}
 function pay(){
   /* ouvre PayPal */
   try{window.open(PAYPAL+'/'+S.acompte,'_blank');}catch(e){}
@@ -609,9 +617,9 @@ function pay(){
   refreshAdmin();goSub('vdone',4);
   /* Envoi Supabase + email confirmation */
   var email = document.getElementById('e-email').value.trim().toLowerCase();
-  var slotParts = S.slot ? S.slot.split(' ') : [];
-  var dateRdv = slotParts[0] || '';
-  var heureRdv = slotParts[1] || '';
+  var slotAv = S.slot ? S.slot.split(' à ') : ['',''];
+  var heureRdv = (slotAv[1] || '').trim();
+  var dateRdv = parseDateFr(slotAv[0] || '');
   fetch('/api/reservation', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
