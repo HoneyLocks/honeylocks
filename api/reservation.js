@@ -22,7 +22,7 @@ function buildIcs({ uid, summary, description, dtstart, dtend }) {
     'VERSION:2.0',
     'PRODID:-//Honey Locks//FR',
     'CALSCALE:GREGORIAN',
-    'METHOD:REQUEST',
+    'METHOD:PUBLISH',
     'BEGIN:VEVENT',
     'UID:' + uid,
     'DTSTAMP:' + dtstart,
