@@ -699,7 +699,7 @@ function refreshAdmin(){
     h+='<div class="req '+r.status+'"><div class="rqh"><span class="rqn">@'+r.name+'</span><span class="rqs '+r.status+'">'+(r.status==='pending'?'À traiter':'Devis envoyé')+'</span></div>';
     h+='<div class="rqd">🔢 '+r.count+' locks</div>';
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
-    if(r.photos&&r.photos.length){h+='<div class="rqd">🖼 '+r.photos.length+' photo(s)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">';r.photos.forEach(function(src){h+='<img src="'+src+'" style="width:170px;height:170px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">';});h+='</div>';}
+    if(r.photos&&r.photos.length){h+='<div class="rqd">🖼 '+r.photos.length+' photo(s)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">';r.photos.forEach(function(src){h+='<img src="'+src+'" style="width:340px;height:340px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">';});h+='</div>';}
     if(r.notes)h+='<div class="rqd">📝 '+r.notes+'</div>';
     if(r.status==='pending')h+='<div class="qin"><input type="number" id="q-'+r.id+'" placeholder="Prix €" inputmode="numeric"><button onclick="sendQuote('+r.id+')">Envoyer</button></div>';
     else h+='<div class="rqd" style="color:var(--success)">✓ Devis : '+r.price+'€ — peut réserver librement</div>';
@@ -713,7 +713,7 @@ function refreshAdmin(){
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
-    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">✓ Présence confirmée</button>';
+    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">✅ Acompte reçu</button>';
     if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
     b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
   });
@@ -772,7 +772,20 @@ function sendQuote(id){
     }).catch(function(e){console.log('Erreur envoi devis:',e)});
   }
 }
-function delBk(id){if(!confirm('Annuler ce rendez-vous ?'))return;S.bookings=S.bookings.filter(function(x){return x.id!==id});S.rdv=Math.max(0,S.rdv-1);refreshAdmin()}
+function delBk(id){
+  if(!confirm('Annuler ce rendez-vous ?'))return;
+  var bk=S.bookings.filter(function(x){return x.id===id})[0];
+  S.bookings=S.bookings.filter(function(x){return x.id!==id});
+  S.rdv=Math.max(0,S.rdv-1);
+  refreshAdmin();
+  if(bk&&bk.email){
+    fetch('/api/annulation',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nom:bk.insta||'Cliente',email:bk.email,service:bk.service,slot:bk.slot})
+    }).catch(function(){});
+  }
+}
 function sendRappel(id){
   var bk=S.bookings.filter(function(x){return x.id===id})[0];
   if(!bk||!bk.email){alert('Pas d\'email pour cette réservation.');return;}

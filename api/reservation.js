@@ -76,5 +76,29 @@ module.exports = async (req, res) => {
     console.error('Email error:', e.message)
   }
 
+  try {
+    await makeTransport().sendMail({
+      from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      subject: '🔔 Nouvelle réservation — ' + (nom || email),
+      html: `
+        <div style="font-family:sans-serif;max-width:500px;margin:0 auto;color:#222">
+          <h2 style="color:#c9a84c">Nouvelle réservation 🍯</h2>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv || '—'}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv || '—'}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prixNum}€</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${acompteNum}€</td></tr>
+          </table>
+        </div>
+      `
+    })
+  } catch (e) {
+    console.error('Notif email error:', e.message)
+  }
+
   res.status(200).json({ success: true })
 }

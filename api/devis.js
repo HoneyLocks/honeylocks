@@ -79,5 +79,29 @@ module.exports = async (req, res) => {
     console.error('Email error:', e.message)
   }
 
+  if (!isQuote) {
+    try {
+      await makeTransport().sendMail({
+        from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
+        to: process.env.GMAIL_USER,
+        subject: '🔔 Nouvelle demande de devis — ' + (nom || email),
+        html: `
+          <div style="font-family:sans-serif;max-width:500px;margin:0 auto;color:#222">
+            <h2 style="color:#c9a84c">Nouvelle demande de devis 🍯</h2>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
+              <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
+              <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
+              ${message ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Message</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${message}</td></tr>` : ''}
+            </table>
+            <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.vercel.app">honeylocks.vercel.app</a> pour envoyer le devis.</p>
+          </div>
+        `
+      })
+    } catch (e) {
+      console.error('Notif email error:', e.message)
+    }
+  }
+
   res.status(200).json({ success: true })
 }
