@@ -226,7 +226,7 @@ textarea{resize:vertical;min-height:66px}
 .bk .meta{font-size:12px;color:var(--dim);margin-bottom:8px}
 .bk-actions{display:flex;gap:8px;flex-wrap:wrap}
 .bk-actions button{flex:1;min-width:46%;border:none;border-radius:9px;padding:9px;font-family:inherit;font-size:12px;cursor:pointer}
-.bk-ok{background:var(--success);color:#fff}.bk-del{background:rgba(196,106,90,.2);color:var(--danger);border:1px solid rgba(196,106,90,.3)!important}
+.bk-ok{background:var(--success);color:#fff}.bk-rappel{background:rgba(201,168,76,.15);color:var(--honey);border:1px solid rgba(201,168,76,.3)!important}.bk-del{background:rgba(196,106,90,.2);color:var(--danger);border:1px solid rgba(196,106,90,.3)!important}
 .empty{font-size:13px;color:var(--dim);text-align:center;padding:24px 0}
 .aday{margin-bottom:18px}
 .aday-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -714,7 +714,9 @@ function refreshAdmin(){
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
-    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">Présence confirmée</button><button class="bk-del" onclick="delBk('+bk.id+')">Annuler</button></div></div>';
+    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">✓ Présence confirmée</button>';
+    if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
+    b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
   });
   document.getElementById('abk').innerHTML=b;
   renderSlotsAdmin();
@@ -771,7 +773,19 @@ function sendQuote(id){
     }).catch(function(e){console.log('Erreur envoi devis:',e)});
   }
 }
-function delBk(id){S.bookings=S.bookings.filter(function(x){return x.id!==id});S.rdv=Math.max(0,S.rdv-1);refreshAdmin()}
+function delBk(id){if(!confirm('Annuler ce rendez-vous ?'))return;S.bookings=S.bookings.filter(function(x){return x.id!==id});S.rdv=Math.max(0,S.rdv-1);refreshAdmin()}
+function sendRappel(id){
+  var bk=S.bookings.filter(function(x){return x.id===id})[0];
+  if(!bk||!bk.email){alert('Pas d\'email pour cette réservation.');return;}
+  fetch('/api/rappel-acompte',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nom:bk.insta||'Cliente',email:bk.email,service:bk.service,slot:bk.slot,acompte:bk.acompte})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.success)alert('Rappel envoyé à '+bk.email+' ✅');
+    else alert('Erreur : '+( d.error||'inconnue'));
+  }).catch(function(){alert('Erreur réseau.');});
+}
 refreshAdmin();
 </script>
 </body>
