@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
           </table>
           <p style="margin-top:16px">💵 Paiement le jour J en <strong>espèces uniquement</strong>.</p>
           <p>⚠️ L'acompte versé est <strong>non remboursable</strong>.</p>
-          <p>Tu recevras l'adresse du salon la veille de ton rendez-vous.</p>
+          <p>📍 L'adresse exacte du salon te sera envoyée par mail la veille de ton rendez-vous à 9h30.</p>
           <div style="margin-top:20px;background:#fff8e1;border-left:4px solid #c9a84c;border-radius:0 8px 8px 0;padding:14px 16px">
             <p style="margin:0 0 8px;font-weight:700;color:#7a5c00;font-size:13px">📋 Consignes importantes</p>
             <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">
