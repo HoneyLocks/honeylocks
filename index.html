@@ -406,6 +406,7 @@ textarea{resize:vertical;min-height:66px}
     <label>Instagram</label>
     <div class="ig-wrap"><span class="at">@</span><input type="text" id="d-insta" placeholder="ton pseudo"></div>
     <label>Email <span class="lopt">(pour recevoir ton devis)</span></label><input type="email" id="d-email" placeholder="ton@email.com" inputmode="email" oninput="checkDevis()">
+    <div id="d-dup-err" class="note" style="display:none;border-left-color:var(--honey);margin-top:8px;font-size:13px"></div>
     <label>Nombre de locks (environ)</label><input type="number" id="d-count" placeholder="ex : 120" inputmode="numeric">
     <label>Photos de tes locks <span class="lopt">(1 min, 3 max)</span></label>
     <div class="photos" id="photos-cur"></div>
@@ -558,11 +559,25 @@ function rmPhoto(id,i){
   var c=document.getElementById(id);if(c._render)c._render();checkDevis();
 }
 function checkDevis(){
-  var valid=/.+@.+\..+/.test(document.getElementById('d-email').value)&&S.curPhotos.length>=1;
+  var email=document.getElementById('d-email').value.trim().toLowerCase();
+  var errEl=document.getElementById('d-dup-err');
+  var dup=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});
+  if(dup){
+    errEl.style.display='block';
+    errEl.innerHTML='Tu as déjà une demande en cours chez Honey Locks. Accède à ton espace via le bouton "J\'ai déjà mon prix" 🍯';
+    document.getElementById('bdevis').disabled=true;
+    return;
+  }
+  errEl.style.display='none';
+  var valid=/.+@.+\..+/.test(email)&&S.curPhotos.length>=1;
   document.getElementById('bdevis').disabled=!valid;
 }
 function submitDevis(){
-  var btn=document.getElementById('bdevis');btn.disabled=true;btn.textContent='Envoi…';
+  var btn=document.getElementById('bdevis');
+  var email=document.getElementById('d-email').value.trim();
+  var dup=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email.toLowerCase();});
+  if(dup){document.getElementById('d-dup-err').style.display='block';return;}
+  btn.disabled=true;btn.textContent='Envoi…';
   var insta=document.getElementById('d-insta').value.trim()||'Cliente';
   var email=document.getElementById('d-email').value.trim();
   var count=document.getElementById('d-count').value.trim();
