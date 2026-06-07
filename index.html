@@ -247,6 +247,8 @@ textarea{resize:vertical;min-height:66px}
 .cal-svc{color:var(--text);font-size:12px}
 .cal-who{color:var(--dim);font-size:11px}
 .cal-none{font-size:11px;color:rgba(245,233,200,.15);line-height:1;padding-top:3px}
+.sv-back{background:none;border:none;color:var(--honey);font-size:22px;cursor:pointer;padding:0 0 10px;opacity:.5;display:block;line-height:1;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+.sv-back:active{opacity:1}
 </style>
 </head>
 <body>
@@ -364,6 +366,7 @@ textarea{resize:vertical;min-height:66px}
 
   <!-- 2 options -->
   <div class="sv" id="vopt">
+    <button class="sv-back" onclick="back1()">←</button>
     <h2 id="opt-title">Options</h2><p class="sub">Personnalise ta prestation</p>
     <div id="size-block" style="display:none">
       <label>Taille des locks</label>
@@ -381,6 +384,7 @@ textarea{resize:vertical;min-height:66px}
 
   <!-- 2 check : déjà cliente ou nouvelle ? (retwist uniquement) -->
   <div class="sv" id="vcheck">
+    <button class="sv-back" onclick="back1()">←</button>
     <h2>Reprise / Retwist</h2>
     <p class="sub">Tu as déjà eu un devis chez moi ?</p>
     <div class="svc" style="margin-bottom:12px;cursor:pointer" onclick="goExisting()">
@@ -413,6 +417,7 @@ textarea{resize:vertical;min-height:66px}
 
   <!-- 2 devis -->
   <div class="sv" id="vdevis">
+    <button class="sv-back" onclick="goSub('vcheck',2)">←</button>
     <h2>Demande de devis</h2><p class="sub">Photos + nombre de locks. Je t'envoie ton prix perso sous 24h, ensuite tu réserves librement.</p>
     <label>Instagram</label>
     <div class="ig-wrap"><span class="at">@</span><input type="text" id="d-insta" placeholder="ton pseudo"></div>
@@ -429,12 +434,14 @@ textarea{resize:vertical;min-height:66px}
 
   <!-- 2 devis confirm -->
   <div class="sv" id="vdconf">
+    <button class="sv-back" onclick="goSub('vcheck',2)">←</button>
     <div class="status"><div class="sicon pend">⏳</div><h3>Demande envoyée !</h3><p>Je regarde tes photos et je t'envoie ton devis très vite. Dès qu'il est validé, tu réserves tes RDV librement. 🍯</p></div>
     <button class="btn ghost" onclick="resetRes()" style="margin-top:10px">Accueil réservation</button>
   </div>
 
   <!-- 3 slots -->
   <div class="sv" id="vslot">
+    <button class="sv-back" onclick="backFromSlot()">←</button>
     <h2>Choisis ton créneau</h2><p class="sub" id="slot-sub"></p>
     <div id="slots"></div>
     <div class="brow"><button class="btn ghost" onclick="backFromSlot()">Retour</button></div>
@@ -442,6 +449,7 @@ textarea{resize:vertical;min-height:66px}
 
   <!-- 3b coordonnées (parcours normal) -->
   <div class="sv" id="vclient">
+    <button class="sv-back" onclick="goSub('vslot',3)">←</button>
     <h2>Tes coordonnées</h2><p class="sub">Pour recevoir ta confirmation de RDV 🍯</p>
     <label>Instagram</label>
     <div class="ig-wrap"><span class="at">@</span><input type="text" id="c-insta" placeholder="@ton_instagram"></div>
@@ -452,6 +460,7 @@ textarea{resize:vertical;min-height:66px}
 
   <!-- 4 recap -->
   <div class="sv" id="vrecap">
+    <button class="sv-back" onclick="goSub('vslot',3)">←</button>
     <h2>Récapitulatif</h2><p class="sub">Verse ton acompte pour bloquer le créneau</p>
     <div class="recap" id="recap"></div>
     <div class="note"><strong>Acompte obligatoire.</strong> Le créneau n'est confirmé qu'une fois l'acompte reçu. Il est déduit du prix total le jour J. 🤍</div>
