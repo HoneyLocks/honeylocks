@@ -249,6 +249,11 @@ textarea{resize:vertical;min-height:66px}
 .cal-none{font-size:11px;color:rgba(245,233,200,.15);line-height:1;padding-top:3px}
 .sv-back{background:none;border:none;color:var(--honey);font-size:22px;cursor:pointer;padding:0 0 10px;opacity:.5;display:block;line-height:1;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .sv-back:active{opacity:1}
+.galerie-wrap{padding:22px 0 4px;overflow:hidden}
+.galerie-title{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;padding:0 18px;margin-bottom:12px}
+.galerie-track{display:flex;gap:10px;width:max-content;animation:scroll-galerie 20s linear infinite;padding:0 18px}
+.galerie-track img{width:150px;height:150px;object-fit:cover;border-radius:14px;flex-shrink:0;display:block}
+@keyframes scroll-galerie{0%{transform:translateX(0)}100%{transform:translateX(calc(-50% - 5px))}}
 </style>
 </head>
 <body>
@@ -295,6 +300,19 @@ textarea{resize:vertical;min-height:66px}
     <div class="home-card" onclick="go('rules')"><div class="ic">📋</div><div><div class="ct">Règlement</div><div class="cd">À lire avant de réserver</div></div></div>
   </div>
   <div style="padding:8px 18px"><div class="note"><strong>🍯 Offre de bienvenue — Entraînement & contenu</strong><br><span style="font-size:13px">Je développe mes techniques et crée du contenu&nbsp;: toutes les tresses, vanilles & <strong>départs de locks à petit prix</strong>. C'est le moment d'en profiter&nbsp;!</span></div></div>
+  <div class="galerie-wrap">
+    <div class="galerie-title">Mes réalisations 🍯</div>
+    <div class="galerie-track">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1779.jpeg" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1783.jpeg" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1787.jpeg" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1815.png" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1779.jpeg" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1783.jpeg" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1787.jpeg" alt="" loading="lazy">
+      <img src="https://wxrczabrrpspfvklroar.supabase.co/storage/v1/object/public/galerie/IMG_1815.png" alt="" loading="lazy">
+    </div>
+  </div>
   <div style="display:flex;justify-content:center;gap:24px;padding:20px 18px 28px">
     <a href="https://www.instagram.com/honeylocks__" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:7px;color:rgba(201,168,76,.6);text-decoration:none;font-size:13px;letter-spacing:.4px;transition:color .15s" onmouseover="this.style.color='#c9a84c'" onmouseout="this.style.color='rgba(201,168,76,.6)'">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -607,11 +625,11 @@ function checkDevis(){
 function submitDevis(){
   var btn=document.getElementById('bdevis');
   var email=document.getElementById('d-email').value.trim();
+  var errEl=document.getElementById('d-dup-err');
   var dup=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email.toLowerCase();});
-  if(dup){document.getElementById('d-dup-err').style.display='block';return;}
+  if(dup){errEl.style.display='block';errEl.innerHTML='Tu as déjà une demande en cours chez Honey Locks. Accède à ton espace via le bouton \'J\'ai reçu mon devis\' 🍯';return;}
   btn.disabled=true;btn.textContent='Envoi…';
   var insta=document.getElementById('d-insta').value.trim()||'Cliente';
-  var email=document.getElementById('d-email').value.trim();
   var count=document.getElementById('d-count').value.trim();
   var notes=document.getElementById('d-notes').value.trim();
   S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,status:'pending',price:null,photos:S.curPhotos.slice()});
@@ -619,8 +637,16 @@ function submitDevis(){
   fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({nom:insta,prenom:'',email:email,service:S.name,prix:'sur devis',
       message:(notes?notes+'\n':'')+(count?count+' locks':'')})
-  }).catch(function(){});
-  goSub('vdconf',2);
+  }).then(function(r){
+    if(r.status===409){
+      S.reqs=S.reqs.filter(function(x){return x.email!==email;});
+      refreshAdmin();
+      btn.disabled=false;btn.textContent='Envoyer';
+      errEl.style.display='block';errEl.innerHTML='Tu as déjà une demande en cours chez Honey Locks. Accède à ton espace via le bouton \'J\'ai reçu mon devis\' 🍯';
+      return;
+    }
+    goSub('vdconf',2);
+  }).catch(function(){goSub('vdconf',2);});
 }
 function checkExisting(){document.getElementById('b-existing').disabled=!/.+@.+\..+/.test(document.getElementById('e-email').value)}
 function loginExisting(){

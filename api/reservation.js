@@ -1,5 +1,12 @@
 const nodemailer = require('nodemailer')
 
+function generateToken() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+  })
+}
+
 function makeTransport() {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -46,6 +53,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte } = req.body
+  const token = generateToken()
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
   const prixNum = parseFloat(prixStr) || 0
   const acompteNum = parseFloat(acompte) || 0
@@ -68,7 +76,8 @@ module.exports = async (req, res) => {
       heure_rdv: heure_rdv || null,
       prix: prixStr,
       statut: 'confirmé',
-      acompte_paye: false
+      acompte_paye: false,
+      token_annulation: token
     })
   })
   const sbData = await sbRes.json()
@@ -97,6 +106,7 @@ module.exports = async (req, res) => {
           <p style="margin-top:16px">💵 Paiement le jour J en <strong>espèces uniquement</strong>.</p>
           <p>⚠️ L'acompte versé est <strong>non remboursable</strong>.</p>
           <p>📍 L'adresse exacte du salon te sera envoyée par mail la veille de ton rendez-vous à 9h30.</p>
+          <p style="margin-top:16px;font-size:13px;color:#888">Tu ne peux pas venir ? <a href="https://honeylocks.fr/api/annulation?token=${token}" style="color:#c9a84c">Annule ton rendez-vous ici</a> — ⚠️ L'acompte reste non remboursable.</p>
           <div style="margin-top:20px;background:#fff8e1;border-left:4px solid #c9a84c;border-radius:0 8px 8px 0;padding:14px 16px">
             <p style="margin:0 0 8px;font-weight:700;color:#7a5c00;font-size:13px">📋 Consignes importantes</p>
             <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">

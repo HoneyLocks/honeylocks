@@ -18,6 +18,16 @@ module.exports = async (req, res) => {
   const { nom, prenom, email, service, prix, message } = req.body
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
 
+  // Vérifier doublon
+  const dupRes = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=eq.${encodeURIComponent(email)}&statut=eq.devis&select=id`,
+    { headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` } }
+  )
+  const dupData = await dupRes.json()
+  if (Array.isArray(dupData) && dupData.length > 0) {
+    return res.status(409).json({ error: 'exists' })
+  }
+
   // Sauvegarder dans Supabase via REST
   const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
     method: 'POST',
