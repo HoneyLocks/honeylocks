@@ -65,7 +65,8 @@ module.exports = async (req, res) => {
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${rdv.heure_rdv || '—'}</td></tr>
             </table>
             <p style="margin-top:16px">⚠️ L'acompte versé est <strong>non remboursable</strong>.</p>
-            <p style="font-size:13px;color:#666">L'adresse du salon te sera communiquée aujourd'hui.</p>
+            <p style="margin-top:16px">📍 <strong>85 route de Genève, 69140 Rillieux-la-Pape</strong></p>
+            <p style="font-size:13px;color:#666">Envoie-moi un message sur Instagram <a href="https://www.instagram.com/honeylocks__" style="color:#c9a84c">@honeylocks__</a> quand tu es là 🍯</p>
             ${CONSIGNES}
             <p style="color:#999;font-size:12px;margin-top:16px">Honey Locks · Lyon · Disponible 7j/7</p>
           </div>
