@@ -5,22 +5,41 @@ module.exports = async (req, res) => {
 
   const BASE = process.env.SUPABASE_URL + '/rest/v1/reservations'
   const HEADERS = {
-    'Content-Type': 'application/json',
     'apikey': process.env.SUPABASE_KEY,
     'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
   }
 
-  // Supprimer les réservations dont le nom commence par "test_" ou "flow_"
-  const patterns = [
-    'cliente_nom=ilike.test_%',
-    'cliente_nom=ilike.flow_%',
+  const results = []
+
+  // D'abord lister ce qu'on va supprimer
+  const listRes = await fetch(`${BASE}?select=id,cliente_nom,cliente_email,statut`, { headers: HEADERS })
+  const listData = await listRes.json()
+  console.log('[cleanup] toutes les réservations:', JSON.stringify(listData))
+
+  // Supprimer les enregistrements de test un par un (filtre sur nom exact ou pattern)
+  const testNoms = [
+    'test_rappel test_rappel',
+    'test_admin_mail test_admin_mail',
+    'test_complet test_complet',
+    'flow_test flow_test',
+    'test_final2 test_final2',
+    'test_devis2 test_devis2',
+    'test_devis3 test_devis3',
+    'test_devis_final test_devis_final',
+    'test_devis_x test_devis_x',
+    'test_devis test_devis',
   ]
 
-  const results = []
-  for (const pattern of patterns) {
-    const r = await fetch(`${BASE}?${pattern}`, { method: 'DELETE', headers: HEADERS })
-    results.push({ pattern, status: r.status })
+  for (const nom of testNoms) {
+    const url = `${BASE}?cliente_nom=eq.${encodeURIComponent(nom)}`
+    const r = await fetch(url, { method: 'DELETE', headers: HEADERS })
+    const body = await r.text()
+    results.push({ nom, status: r.status, body: body.slice(0, 100) })
   }
 
-  res.status(200).json({ deleted: results })
+  // Supprimer aussi par email test
+  const r2 = await fetch(`${BASE}?cliente_email=eq.test%40test.com`, { method: 'DELETE', headers: HEADERS })
+  results.push({ email: 'test@test.com', status: r2.status })
+
+  res.status(200).json({ total_before: listData.length, deleted: results })
 }
