@@ -362,8 +362,6 @@ textarea{resize:vertical;min-height:66px}
     <div class="cat-title">Reprise de locks</div>
     <div class="svc" data-id="reprise" data-name="Retwist + Coiffure" data-type="devis" data-base="0" onclick="pick(this)">
       <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Retwist + Coiffure</div><div class="svc-desc">Photo + nombre de locks pour ton prix perso</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>à partir de 35€</div></div>
-    <div class="svc" data-id="retwist-meches" data-name="Vanilles + mèches bouclées" data-type="devis" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Vanilles + mèches bouclées</div><div class="svc-desc">Coiffure protectrice · mèches non comprises</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>+20€ coiffure</div></div>
     <div class="svc" data-id="demelage" data-name="Démêlage de locks" data-type="devis" data-base="0" onclick="pick(this)">
       <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Démêlage de locks</div><div class="svc-desc">Prestation longue · sur devis</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>à partir de 200€</div></div>
 
@@ -461,10 +459,16 @@ textarea{resize:vertical;min-height:66px}
     <div class="photos" id="photos-inspo"></div>
     <p style="font-size:12.5px;color:var(--dim);margin:4px 0 10px;line-height:1.65">Pas besoin de savoir exactement ce que tu veux ! Dis-moi juste si tu souhaites une coiffure protectrice 🍯<br>Si ta coiffure souhaitée nécessite des mèches (autre que Vanilles + mèches bouclées), envoie-moi un DM sur Instagram <a href="https://www.instagram.com/honeylocks__" target="_blank" rel="noopener" style="color:var(--honey)">@honeylocks__</a> avant de faire ta demande.</p>
     <label>Précisions <span class="lopt">(optionnel)</span></label><textarea id="d-notes" placeholder="État actuel, longueur souhaitée..."></textarea>
-    <label id="d-sans-coif-wrap" style="display:none;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px;margin-bottom:4px">
-      <input type="checkbox" id="d-sans-coif" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">
-      <span style="font-size:14px;color:var(--dim)">Sans coiffure protectrice <span style="color:var(--honey)">(-5€ sur le devis)</span></span>
-    </label>
+    <div id="d-retwist-opts" style="display:none">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px;margin-bottom:4px">
+        <input type="checkbox" id="d-meches" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">
+        <span style="font-size:14px;color:var(--dim)">Vanilles + mèches bouclées <span style="color:var(--honey)">(+20€, mèches non comprises)</span></span>
+      </label>
+      <label id="d-sans-coif-wrap" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:4px;margin-bottom:4px">
+        <input type="checkbox" id="d-sans-coif" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">
+        <span style="font-size:14px;color:var(--dim)">Sans coiffure protectrice <span style="color:var(--honey)">(-5€ sur le devis)</span></span>
+      </label>
+    </div>
     <div class="brow"><button class="btn ghost" onclick="back1()">Retour</button><button class="btn" id="bdevis" disabled onclick="submitDevis()">Envoyer</button></div>
   </div>
 
@@ -580,7 +584,7 @@ function toggleOpt(el){
 }
 function fromOpt(){S.price=S.base+S.optTotal;buildSlots();goSub('vslot',3);}
 function goExisting(){document.getElementById('e-email').value='';document.getElementById('existing-result').innerHTML='';document.getElementById('b-existing').disabled=false;goSub('vexisting',2)}
-function goNewDevis(){initPhotos();var w=document.getElementById('d-sans-coif-wrap');if(w)w.style.display=(S.name==='Retwist + Coiffure'?'flex':'none');goSub('vdevis',2)}
+function goNewDevis(){initPhotos();var w=document.getElementById('d-retwist-opts');if(w)w.style.display=(S.name==='Retwist + Coiffure'?'block':'none');goSub('vdevis',2)}
 function initPhotos(){
   S.curPhotos=[];S.inspoPhotos=[];
   document.getElementById('bdevis').textContent='Envoyer';
@@ -641,11 +645,12 @@ function submitDevis(){
   var count=document.getElementById('d-count').value.trim();
   var notes=document.getElementById('d-notes').value.trim();
   var sansCoif=document.getElementById('d-sans-coif').checked;
-  S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,sansCoif:sansCoif,status:'pending',price:null,photos:S.curPhotos.slice()});
+  var avecMeches=document.getElementById('d-meches').checked;
+  S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,sansCoif:sansCoif,avecMeches:avecMeches,status:'pending',price:null,photos:S.curPhotos.slice()});
   refreshAdmin();
   fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({nom:insta,prenom:'',email:email,service:S.name,prix:'sur devis',
-      message:(notes?notes+'\n':'')+(count?count+' locks':'')+(sansCoif?'\nSans coiffure protectrice (-5€)':'')})
+      message:(notes?notes+'\n':'')+(count?count+' locks':'')+(avecMeches?'\nVanilles + mèches bouclées (+20€, mèches non comprises)':'')+(sansCoif?'\nSans coiffure protectrice (-5€)':'')})
   }).then(function(r){
     if(r.status===409){
       S.reqs=S.reqs.filter(function(x){return x.email!==email;});
@@ -774,7 +779,7 @@ function pay(){
     })
   }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
-function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.clientInsta=null;S.clientEmail=null;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';document.getElementById('d-sans-coif').checked=false;var _scw=document.getElementById('d-sans-coif-wrap');if(_scw)_scw.style.display='none';goSub('v1',1)}
+function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.clientInsta=null;S.clientEmail=null;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';document.getElementById('d-sans-coif').checked=false;document.getElementById('d-meches').checked=false;var _ow=document.getElementById('d-retwist-opts');if(_ow)_ow.style.display='none';goSub('v1',1)}
 
 /* ADMIN */
 function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();refreshAdmin();document.getElementById('admin').classList.add('open')}
@@ -791,6 +796,7 @@ function refreshAdmin(){
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
     if(r.photos&&r.photos.length){h+='<div class="rqd">🖼 '+r.photos.length+' photo(s)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">';r.photos.forEach(function(src){h+='<img src="'+src+'" style="width:340px;height:340px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">';});h+='</div>';}
     if(r.notes)h+='<div class="rqd">📝 '+r.notes+'</div>';
+    if(r.avecMeches)h+='<div class="rqd">💜 Vanilles + mèches bouclées (+20€, mèches non comprises)</div>';
     if(r.sansCoif)h+='<div class="rqd">✂️ Sans coiffure (-5€)</div>';
     if(r.status==='pending')h+='<div class="qin"><input type="number" id="q-'+r.id+'" placeholder="Prix €" inputmode="numeric"><button onclick="sendQuote('+r.id+')">Envoyer</button></div>';
     else h+='<div class="rqd" style="color:var(--success)">✓ Devis : '+r.price+'€ — peut réserver librement</div>';
