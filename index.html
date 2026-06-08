@@ -892,22 +892,27 @@ function sendQuote(id){
   var v=document.getElementById('q-'+id).value;
   if(!v)return;
   var r=S.reqs.filter(function(x){return x.id===id})[0];
+  if(!r){console.log('sendQuote: req introuvable id=',id);return;}
+  console.log('sendQuote: email=',r.email,'prix=',v);
+  if(!r.email){console.log('sendQuote: pas d\'email pour cette demande, annulation envoi');r.status='quoted';r.price=v;refreshAdmin();return;}
   r.status='quoted';r.price=v;refreshAdmin();
-  /* Envoyer le prix par mail */
-  if(r.email){
-    fetch('/api/devis',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        nom: r.name || 'Cliente',
-        prenom: r.name || 'Cliente',
-        email: r.email,
-        service: 'Locks (' + r.count + ' locks)',
-        prix: v + '€',
-        message: r.notes || ''
-      })
-    }).catch(function(e){console.log('Erreur envoi devis:',e)});
-  }
+  fetch('/api/devis',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      nom: r.name || 'Cliente',
+      prenom: r.name || 'Cliente',
+      email: r.email,
+      service: 'Locks (' + r.count + ' locks)',
+      prix: v + '€',
+      message: r.notes || ''
+    })
+  }).then(function(res){
+    console.log('sendQuote: réponse API status=',res.status);
+    return res.json();
+  }).then(function(d){
+    console.log('sendQuote: réponse API body=',JSON.stringify(d));
+  }).catch(function(e){console.log('sendQuote: erreur fetch',e);});
 }
 function delBk(id){
   if(!confirm('Annuler ce rendez-vous ?'))return;

@@ -17,45 +17,52 @@ module.exports = async (req, res) => {
 
   const { nom, prenom, email, service, prix, message } = req.body
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
+  const isQuote = prixStr && prixStr.toLowerCase() !== 'sur devis' && !isNaN(parseFloat(prixStr))
 
-  // Vérifier doublon
-  const dupRes = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=eq.${encodeURIComponent(email)}&statut=eq.devis&select=id`,
-    { headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` } }
-  )
-  const dupData = await dupRes.json()
-  if (Array.isArray(dupData) && dupData.length > 0) {
-    return res.status(409).json({ error: 'exists' })
+  console.log('[devis] body reçu:', JSON.stringify({ nom, email, service, prix, prixStr, isQuote }))
+
+  // Vérifier doublon uniquement pour les nouvelles demandes (pas pour l'envoi d'un vrai prix)
+  if (!isQuote) {
+    const dupRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=eq.${encodeURIComponent(email)}&statut=eq.devis&select=id`,
+      { headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` } }
+    )
+    const dupData = await dupRes.json()
+    console.log('[devis] vérif doublon status=', dupRes.status, 'data=', JSON.stringify(dupData))
+    if (Array.isArray(dupData) && dupData.length > 0) {
+      console.log('[devis] doublon détecté, retour 409')
+      return res.status(409).json({ error: 'exists' })
+    }
+  } else {
+    console.log('[devis] envoi devis avec prix réel, doublon ignoré')
   }
 
-  // Sauvegarder dans Supabase via REST
-  const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': process.env.SUPABASE_KEY,
-      'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({
-      cliente_email: email,
-      cliente_nom: ((nom || '') + ' ' + (prenom || '')).trim(),
-      service: service,
-      prix: prixStr,
-      statut: 'devis'
+  // Sauvegarder dans Supabase uniquement pour les nouvelles demandes
+  if (!isQuote) {
+    const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.SUPABASE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        cliente_email: email,
+        cliente_nom: ((nom || '') + ' ' + (prenom || '')).trim(),
+        service: service,
+        prix: prixStr,
+        statut: 'devis'
+      })
     })
-  })
-
-  const sbData = await sbRes.json()
-  console.log('Supabase INSERT status:', sbRes.status)
-  console.log('Supabase INSERT response:', JSON.stringify(sbData))
-
-  if (sbRes.status >= 400) {
-    return res.status(500).json({ error: 'Supabase insert failed', detail: sbData })
+    const sbData = await sbRes.json()
+    console.log('[devis] Supabase INSERT status:', sbRes.status, 'response:', JSON.stringify(sbData))
+    if (sbRes.status >= 400) {
+      return res.status(500).json({ error: 'Supabase insert failed', detail: sbData })
+    }
   }
 
   const prenom_ = prenom || nom || 'toi'
-  const isQuote = prixStr && !isNaN(parseFloat(prixStr))
 
   const htmlBody = isQuote
     ? `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
@@ -78,15 +85,16 @@ module.exports = async (req, res) => {
       </div>`
 
   try {
+    console.log('[devis] envoi mail à', email, '— isQuote:', isQuote)
     const info = await makeTransport().sendMail({
       from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: isQuote ? '🍯 Ton devis Honey Locks' : '🍯 Demande reçue — Honey Locks',
       html: htmlBody
     })
-    console.log('Email sent:', info.messageId)
+    console.log('[devis] mail envoyé:', info.messageId)
   } catch (e) {
-    console.error('Email error:', e.message)
+    console.error('[devis] erreur envoi mail:', e.message)
   }
 
   if (!isQuote) {
@@ -109,7 +117,7 @@ module.exports = async (req, res) => {
         `
       })
     } catch (e) {
-      console.error('Notif email error:', e.message)
+      console.error('[devis] erreur notif Maïna:', e.message)
     }
   }
 
