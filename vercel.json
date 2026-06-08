@@ -1,5 +1,11 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/rappels",
+      "schedule": "30 7 * * *"
+    }
   ]
 }
