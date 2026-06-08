@@ -37,8 +37,8 @@ module.exports = async (req, res) => {
     console.log('[devis] envoi devis avec prix réel, doublon ignoré')
   }
 
-  // Sauvegarder dans Supabase uniquement pour les nouvelles demandes
   if (!isQuote) {
+    // Nouvelle demande : INSERT
     const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
       method: 'POST',
       headers: {
@@ -60,6 +60,21 @@ module.exports = async (req, res) => {
     if (sbRes.status >= 400) {
       return res.status(500).json({ error: 'Supabase insert failed', detail: sbData })
     }
+  } else {
+    // Envoi du prix par l'admin : PATCH la ligne existante
+    const patchRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=eq.${encodeURIComponent(email)}&statut=eq.devis`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': process.env.SUPABASE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+        },
+        body: JSON.stringify({ prix: prixStr })
+      }
+    )
+    console.log('[devis] Supabase PATCH prix status:', patchRes.status)
   }
 
   const prenom_ = prenom || nom || 'toi'
