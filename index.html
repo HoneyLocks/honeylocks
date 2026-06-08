@@ -361,9 +361,11 @@ textarea{resize:vertical;min-height:66px}
 
     <div class="cat-title">Reprise de locks</div>
     <div class="svc" data-id="reprise" data-name="Retwist + Coiffure" data-type="devis" data-base="0" onclick="pick(this)">
-      <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Retwist + Coiffure</div><div class="svc-desc">Photo + nombre de locks pour ton prix perso</div></div><div class="svc-price">Sur devis · à partir de 35€</div></div>
+      <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Retwist + Coiffure</div><div class="svc-desc">Photo + nombre de locks pour ton prix perso</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>à partir de 35€</div></div>
+    <div class="svc" data-id="retwist-meches" data-name="Vanilles + mèches bouclées" data-type="devis" data-base="20" onclick="pick(this)">
+      <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Vanilles + mèches bouclées</div><div class="svc-desc">Coiffure protectrice · mèches non comprises</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>+20€ coiffure</div></div>
     <div class="svc" data-id="demelage" data-name="Démêlage de locks" data-type="devis" data-base="0" onclick="pick(this)">
-      <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Démêlage de locks</div><div class="svc-desc">Prestation longue · sur devis</div></div><div class="svc-price">dès 200€</div></div>
+      <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Démêlage de locks</div><div class="svc-desc">Prestation longue · sur devis</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>à partir de 200€</div></div>
 
     <div class="cat-title">Départ de locks</div>
     <div class="svc" data-id="depart-twist" data-name="Départ de locks en twist" data-type="size" data-base="15" onclick="pick(this)">
@@ -434,6 +436,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="sv" id="vexisting">
     <h2>Mon espace</h2>
     <p class="sub">Entre ton email pour retrouver ton devis et réserver.</p>
+    <p class="note" style="font-size:12.5px;border-left-color:var(--honey);margin-bottom:14px;line-height:1.6">⚠️ Si tu souhaites une coiffure avec mèches (autre que Vanilles + mèches bouclées), contacte-moi en DM sur <a href="https://www.instagram.com/honeylocks__" target="_blank" rel="noopener" style="color:var(--honey)">@honeylocks__</a> avant de réserver.</p>
     <label>Email</label>
     <input type="email" id="e-email" placeholder="ton@email.com" inputmode="email" oninput="checkExisting()">
     <div id="existing-result" style="margin-top:16px"></div>
@@ -456,8 +459,9 @@ textarea{resize:vertical;min-height:66px}
     <div class="photos" id="photos-cur"></div>
     <label>Photo coiffure souhaitée <span class="lopt">(optionnel)</span></label>
     <div class="photos" id="photos-inspo"></div>
+    <p style="font-size:12.5px;color:var(--dim);margin:4px 0 10px;line-height:1.65">Pas besoin de savoir exactement ce que tu veux ! Dis-moi juste si tu souhaites une coiffure protectrice 🍯<br>Si ta coiffure souhaitée nécessite des mèches (autre que Vanilles + mèches bouclées), envoie-moi un DM sur Instagram <a href="https://www.instagram.com/honeylocks__" target="_blank" rel="noopener" style="color:var(--honey)">@honeylocks__</a> avant de faire ta demande.</p>
     <label>Précisions <span class="lopt">(optionnel)</span></label><textarea id="d-notes" placeholder="État actuel, longueur souhaitée..."></textarea>
-    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px;margin-bottom:4px">
+    <label id="d-sans-coif-wrap" style="display:none;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px;margin-bottom:4px">
       <input type="checkbox" id="d-sans-coif" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">
       <span style="font-size:14px;color:var(--dim)">Sans coiffure protectrice <span style="color:var(--honey)">(-5€ sur le devis)</span></span>
     </label>
@@ -550,7 +554,7 @@ function back1(){goSub('v1',1)}
 
 function from1(){
   S.size=null;S.opts=[];S.optTotal=0;
-  if(S.type==='devis'){S.acompte=ACOMPTE_DEVIS;goSub('vcheck',2);return}
+  if(S.type==='devis'){S.acompte=ACOMPTE_DEVIS;document.querySelector('#vcheck h2').textContent=S.name;goSub('vcheck',2);return}
   S.acompte=ACOMPTE_PROMO;
   document.getElementById('size-block').style.display=(S.type==='size')?'block':'none';
   document.getElementById('vanille-block').style.display=(S.type==='vanille')?'block':'none';
@@ -576,7 +580,7 @@ function toggleOpt(el){
 }
 function fromOpt(){S.price=S.base+S.optTotal;buildSlots();goSub('vslot',3);}
 function goExisting(){document.getElementById('e-email').value='';document.getElementById('existing-result').innerHTML='';document.getElementById('b-existing').disabled=false;goSub('vexisting',2)}
-function goNewDevis(){initPhotos();goSub('vdevis',2)}
+function goNewDevis(){initPhotos();var w=document.getElementById('d-sans-coif-wrap');if(w)w.style.display=(S.name==='Retwist + Coiffure'?'flex':'none');goSub('vdevis',2)}
 function initPhotos(){
   S.curPhotos=[];S.inspoPhotos=[];
   document.getElementById('bdevis').textContent='Envoyer';
@@ -770,7 +774,7 @@ function pay(){
     })
   }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
-function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.clientInsta=null;S.clientEmail=null;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';document.getElementById('d-sans-coif').checked=false;goSub('v1',1)}
+function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.clientInsta=null;S.clientEmail=null;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';document.getElementById('d-sans-coif').checked=false;var _scw=document.getElementById('d-sans-coif-wrap');if(_scw)_scw.style.display='none';goSub('v1',1)}
 
 /* ADMIN */
 function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();refreshAdmin();document.getElementById('admin').classList.add('open')}
