@@ -52,7 +52,8 @@ module.exports = async (req, res) => {
         cliente_nom: ((nom || '') + ' ' + (prenom || '')).trim(),
         service: service,
         prix: prixStr,
-        statut: 'devis'
+        statut: 'devis',
+        notes: message || null
       })
     })
     const sbData = await sbRes.json()
