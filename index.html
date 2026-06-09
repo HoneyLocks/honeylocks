@@ -582,7 +582,7 @@ function toggleOpt(el){
   else{S.opts=S.opts.filter(function(o){return o.key!==key});}
   S.optTotal=S.opts.reduce(function(sum,o){return sum+o.price},0);
 }
-function fromOpt(){S.price=S.base+S.optTotal;buildSlots();goSub('vslot',3);}
+function fromOpt(){S.price=S.base+S.optTotal;buildSlots().then(function(){goSub('vslot',3);});}
 function goExisting(){document.getElementById('e-email').value='';document.getElementById('existing-result').innerHTML='';document.getElementById('b-existing').disabled=false;goSub('vexisting',2)}
 function goNewDevis(){initPhotos();var w=document.getElementById('d-retwist-opts');if(w)w.style.display=(S.name==='Retwist + Coiffure'?'block':'none');goSub('vdevis',2)}
 function initPhotos(){
@@ -673,7 +673,7 @@ function loginExisting(){
       if(data && data.price){
         S.price=data.price;S.quotedName=data.name||em.split('@')[0];
         res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+data.price+'€</strong>. Tu peux réserver ton créneau directement !</div>';
-        setTimeout(function(){buildSlots();goSub('vslot',3)},1800);
+        setTimeout(function(){buildSlots().then(function(){goSub('vslot',3);});},1800);
       } else {
         res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Email non reconnu.</strong><br>Tu n\'as pas encore de devis chez moi — <a onclick="goNewDevis()" style="color:var(--honey);cursor:pointer">clique ici pour en faire une demande</a>.</div>';
       }
@@ -682,7 +682,7 @@ function loginExisting(){
       res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Erreur réseau.</strong> Réessaie dans un instant.</div>';
     });
 }
-function simQuote(){S.price=65;buildSlots();goSub('vslot',3)}
+function simQuote(){S.price=65;buildSlots().then(function(){goSub('vslot',3);});}
 
 function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function initSlotsForRange(start,end){
@@ -704,21 +704,32 @@ function buildSlots(){
   var endMonth=new Date(today.getFullYear(),today.getMonth()+1,0);
   if(today.getDate()>=25){endMonth=new Date(today.getFullYear(),today.getMonth()+2,0);}
   initSlotsForRange(start,endMonth);
-  var h='';
-  var d=new Date(start.getTime());
-  while(d<=endMonth){
-    var iso=isoFmt(d);
-    var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
-    var avail=(S.slots[iso]||[]).filter(function(s){return s.on;});
-    if(avail.length){
-      h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
-      avail.forEach(function(s){h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';});
-      h+='</div></div>';
+  function _render(){
+    var h='';var d=new Date(start.getTime());
+    while(d<=endMonth){
+      var iso=isoFmt(d);
+      var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
+      var avail=(S.slots[iso]||[]).filter(function(s){return s.on;});
+      if(avail.length){
+        h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
+        avail.forEach(function(s){h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';});
+        h+='</div></div>';
+      }
+      d.setDate(d.getDate()+1);
     }
-    d.setDate(d.getDate()+1);
+    document.getElementById('slots').innerHTML=h||'<div class="note" style="text-align:center;border-left:none;background:rgba(201,168,76,.07);border-radius:10px;padding:22px;line-height:1.8">Aucun créneau disponible pour le moment, reviens bientôt 🍯</div>';
+    var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=S.name+extra+' · '+S.price+'€';
   }
-  document.getElementById('slots').innerHTML=h||'<div class="note" style="text-align:center;border-left:none;background:rgba(201,168,76,.07);border-radius:10px;padding:22px;line-height:1.8">Aucun créneau disponible pour le moment, reviens bientôt 🍯</div>';
-  var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=S.name+extra+' · '+S.price+'€';
+  return fetch('/api/admin-bookings')
+    .then(function(r){return r.json();})
+    .catch(function(){return[];})
+    .then(function(bks){
+      (bks||[]).forEach(function(bk){
+        var iso=bk.date_rdv,heure=bk.heure_rdv;
+        if(iso&&heure&&S.slots[iso])S.slots[iso].forEach(function(s){if(s.time===heure)s.on=false;});
+      });
+      saveSlots();_render();
+    });
 }
 function backFromSlot(){if(S.type==='devis')goSub('vcheck',2);else goSub('vopt',2);}
 function pickSlot(el,day,time,iso){document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected')});el.classList.add('selected');S.slot=day+' à '+time;S.slotIso=iso||null;setTimeout(toRecap,80);}
