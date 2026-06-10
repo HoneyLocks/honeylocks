@@ -44,6 +44,33 @@ function buildIcs({ uid, summary, description, dtstart, dtend }) {
   return lines.join('\r\n') + '\r\n'
 }
 
+function buildServiceRows(service, baseService, baseSize, optsData) {
+  const baseName = baseService || service
+  const opts = []
+  if (baseSize) opts.push({ name: baseSize, price: 0 })
+  if (Array.isArray(optsData)) optsData.forEach(o => opts.push(o))
+
+  const tdBase = 'padding:8px;border-bottom:1px solid #eee'
+  let html = `<tr>
+    <td style="${tdBase};vertical-align:top"><strong>Prestation</strong></td>
+    <td style="${tdBase}">${baseName}</td>
+  </tr>`
+
+  opts.forEach((o, i) => {
+    const isLast = i === opts.length - 1
+    const pad = isLast ? '4px 8px 10px' : '2px 8px'
+    const border = isLast ? '1px solid #eee' : 'none'
+    const priceTag = o.price > 0 ? `+${o.price}€` : o.price < 0 ? `${o.price}€` : '+0€'
+    html += `<tr>
+      <td style="padding:${pad};border-bottom:${border}"></td>
+      <td style="padding:${pad};border-bottom:${border};color:#555;font-size:13px">
+        <span style="color:#c9a84c;font-weight:600">${priceTag}</span> ${o.name}
+      </td>
+    </tr>`
+  })
+  return html
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -52,7 +79,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte } = req.body
+  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte, baseService, baseSize, optsData } = req.body
   const token = generateToken()
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
   const prixNum = parseFloat(prixStr) || 0
@@ -77,7 +104,8 @@ module.exports = async (req, res) => {
       prix: prixStr,
       statut: 'confirmé',
       acompte_paye: false,
-      token_annulation: token
+      token_annulation: token,
+      notes: JSON.stringify({ baseService: baseService || null, baseSize: baseSize || null, opts: optsData || [], acompte: acompteNum })
     })
   })
   const sbData = await sbRes.json()
@@ -96,7 +124,7 @@ module.exports = async (req, res) => {
           <p>Bonjour ${prenom || nom},</p>
           <p>Ton rendez-vous est confirmé !</p>
           <table style="width:100%;border-collapse:collapse">
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service}</td></tr>
+            ${buildServiceRows(service, baseService, baseSize, optsData)}
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>${prixNum}€</strong></td></tr>
@@ -111,7 +139,7 @@ module.exports = async (req, res) => {
             <p style="margin:0 0 8px;font-weight:700;color:#7a5c00;font-size:13px">📋 Consignes importantes</p>
             <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">
               <li>Cheveux propres et démêlés obligatoires le jour J</li>
-              <li>Venir avec les cheveux sans produit (sans cire, huile ni crème)</li>
+              <li>Venir avec les cheveux secs sans produits (sans cire, huile ni crème)</li>
               <li>Si brushing non pris et cheveux non étirés : supplément de 10€ facturé</li>
               <li>Retard de plus de 20 min : supplément de 10€ facturé</li>
               <li>Retard de plus de 30 min : rendez-vous annulé, acompte non remboursé</li>
@@ -159,7 +187,7 @@ module.exports = async (req, res) => {
           <table style="width:100%;border-collapse:collapse">
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
+            ${buildServiceRows(service, baseService, baseSize, optsData)}
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv || '—'}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv || '—'}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prixNum}€</td></tr>

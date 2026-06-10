@@ -342,7 +342,7 @@ textarea{resize:vertical;min-height:66px}
   <h1>Règlement</h1>
   <div class="rule"><strong>Acompte obligatoire</strong><span>Aucun créneau n'est bloqué sans acompte. L'acompte est déduit du prix total le jour J.</span></div>
   <div class="rule"><strong>Cheveux propres et démêlés obligatoires</strong><span>Se présenter avec les cheveux propres, étirés et démêlés. Dans le cas contraire, la prestation peut être annulée et l'acompte non remboursé.</span></div>
-  <div class="rule"><strong>Cheveux sans produit</strong><span>Venir avec les cheveux sans produit (sans cire, huile ni crème).</span></div>
+  <div class="rule"><strong>Cheveux secs sans produits</strong><span>Venir avec les cheveux secs sans produits (sans cire, huile ni crème).</span></div>
   <div class="rule"><strong>Brushing non pris ? Supplément possible</strong><span>Si le brushing n'a pas été réservé et que les cheveux ne sont pas étirés, un supplément de +10€ sera facturé.</span></div>
   <div class="rule"><strong>Retard de plus de 20 min</strong><span>Supplément de 10€ facturé. Préviens-moi dès que possible si tu es en retard.</span></div>
   <div class="rule"><strong>Retard de plus de 30 min</strong><span>Rendez-vous annulé, acompte non remboursé.</span></div>
@@ -891,7 +891,10 @@ function pay(){
       date_rdv:dateRdv,
       heure_rdv:heureRdv,
       prix:S.price+'€',
-      acompte:S.acompte+'€'
+      acompte:S.acompte+'€',
+      baseService:S.name,
+      baseSize:S.size||null,
+      optsData:S.opts
     })
   }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
