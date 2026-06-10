@@ -12,6 +12,7 @@ const CONSIGNES = `
     <p style="margin:0 0 8px;font-weight:700;color:#7a5c00;font-size:13px">📋 Consignes importantes</p>
     <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">
       <li>Cheveux propres et démêlés obligatoires le jour J</li>
+      <li>Venir avec les cheveux sans produit (sans cire, huile ni crème)</li>
       <li>Si brushing non pris et cheveux non étirés : supplément de 10€ facturé</li>
       <li>Retard de plus de 20 min : supplément de 10€ facturé</li>
       <li>Retard de plus de 30 min : rendez-vous annulé, acompte non remboursé</li>
