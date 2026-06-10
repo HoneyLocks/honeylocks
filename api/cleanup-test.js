@@ -1,5 +1,5 @@
 module.exports = async (req, res) => {
-  const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations?id=gt.0`, {
+  const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations?created_at=not.is.null`, {
     method: 'DELETE',
     headers: {
       'apikey': process.env.SUPABASE_KEY,
