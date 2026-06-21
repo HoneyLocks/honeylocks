@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://honeylocks.vercel.app/sitemap.xml
+Sitemap: https://honeylocks.fr/sitemap.xml
