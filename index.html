@@ -585,10 +585,6 @@ textarea{resize:vertical;min-height:66px}
         <input type="checkbox" id="d-meches" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">
         <span style="font-size:14px;color:var(--dim)">Vanilles + mèches bouclées <span style="color:var(--honey)">(+20€, mèches non comprises)</span></span>
       </label>
-      <label id="d-sans-coif-wrap" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:4px;margin-bottom:4px">
-        <input type="checkbox" id="d-sans-coif" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">
-        <span style="font-size:14px;color:var(--dim)">Sans coiffure protectrice <span style="color:var(--honey)">(-5€ sur le devis)</span></span>
-      </label>
     </div>
     <div class="brow"><button class="btn ghost" onclick="back1()">Retour</button><button class="btn" id="bdevis" disabled onclick="submitDevis()">Envoyer</button></div>
   </div>
@@ -670,7 +666,7 @@ textarea{resize:vertical;min-height:66px}
 var ACOMPTE_PROMO=10,ACOMPTE_DEVIS=20;
 var PAYPAL='https://www.paypal.me/loveloveleM'; /* lien PayPal.me de Maïna */
 var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,acompte:10,slot:null,slotIso:null,clientInsta:null,clientEmail:null,
-  inspo:false,fulaniFront:null,fulaniBack:null,
+  inspo:false,fulaniFront:null,fulaniBack:null,sansCoif:false,
   curPhotos:[],inspoPhotos:[],
   reqs:[],
   bookings:[],rdv:0,ac:0,slots:{}};
@@ -813,13 +809,12 @@ function submitDevis(){
   var insta=document.getElementById('d-insta').value.trim()||'Cliente';
   var count=document.getElementById('d-count').value.trim();
   var notes=document.getElementById('d-notes').value.trim();
-  var sansCoif=document.getElementById('d-sans-coif').checked;
   var avecMeches=document.getElementById('d-meches').checked;
-  S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,sansCoif:sansCoif,avecMeches:avecMeches,status:'pending',price:null,photos:S.curPhotos.slice()});
+  S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,sansCoif:false,avecMeches:avecMeches,status:'pending',price:null,photos:S.curPhotos.slice()});
   refreshAdmin();
   fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({nom:insta,prenom:'',email:email,service:S.name,prix:'sur devis',
-      message:(notes?notes+'\n':'')+(count?count+' locks':'')+(avecMeches?'\nVanilles + mèches bouclées (+20€, mèches non comprises)':'')+(sansCoif?'\nSans coiffure protectrice (-5€)':'')})
+      message:(notes?notes+'\n':'')+(count?count+' locks':'')+(avecMeches?'\nVanilles + mèches bouclées (+20€, mèches non comprises)':'')})
   }).then(function(r){
     if(r.status===409){
       S.reqs=S.reqs.filter(function(x){return x.email!==email;});
@@ -840,9 +835,14 @@ function loginExisting(){
     .then(function(r){return r.json()})
     .then(function(data){
       if(data && data.price){
-        S.price=data.price;S.quotedName=data.name||em.split('@')[0];
-        res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+data.price+'€</strong>. Tu peux réserver ton créneau directement !</div>';
-        setTimeout(function(){buildSlots().then(function(){goSub('vslot',3);});},1800);
+        S.quotedName=data.name||em.split('@')[0];
+        var _bp=data.price;
+        res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+_bp+'€</strong>.</div>'
+          +'<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:14px 0 0">'
+          +'<input type="checkbox" id="e-sans-coif" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">'
+          +'<span style="font-size:14px;color:var(--dim)">Sans coiffure protectrice <span style="color:var(--honey)">(-5€)</span></span>'
+          +'</label>'
+          +'<button class="btn" style="margin-top:14px;width:100%" onclick="bookAfterDevis('+_bp+')">Réserver mon créneau →</button>';
       } else {
         res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Email non reconnu.</strong><br>Tu n\'as pas encore de devis chez moi — <a onclick="goNewDevis()" style="color:var(--honey);cursor:pointer">clique ici pour en faire une demande</a>.</div>';
       }
@@ -851,6 +851,7 @@ function loginExisting(){
       res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Erreur réseau.</strong> Réessaie dans un instant.</div>';
     });
 }
+function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');S.sansCoif=sc?sc.checked:false;S.price=S.sansCoif?base-5:base;buildSlots().then(function(){goSub('vslot',3);});}
 function simQuote(){S.price=65;buildSlots().then(function(){goSub('vslot',3);});}
 
 function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -939,6 +940,7 @@ function _buildRecap(){
   var h='<div class="rrow"><span>Prestation</span><span class="v">'+S.name+'</span></div>';
   if(S.size)h+='<div class="rrow"><span>Taille</span><span class="v">'+S.size+'</span></div>';
   S.opts.forEach(function(o){h+='<div class="rrow"><span>+ '+o.name+'</span><span class="v">+'+o.price+'€</span></div>'});
+  if(S.sansCoif)h+='<div class="rrow"><span>Sans coiffure protectrice</span><span class="v">−5€</span></div>';
   h+='<div class="rrow"><span>Créneau</span><span class="v">'+S.slot+'</span></div>';
   if(S.clientInsta)h+='<div class="rrow"><span>Instagram</span><span class="v">@'+S.clientInsta+'</span></div>';
   h+='<div class="rrow"><span>Prix total</span><span class="v">'+S.price+'€</span></div>';
@@ -957,7 +959,7 @@ function pay(){
   var bkEmail=S.clientEmail||document.getElementById('e-email').value.trim().toLowerCase();
   var bkNom=S.clientInsta||S.quotedName||'Cliente';
   var _optsStr=S.opts.map(function(o){return o.name+(o.price?' (+'+o.price+'€)':'');}).join(' · ');
-  var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;
+  var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
   S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail});
   if(S.slotIso&&S.slots[S.slotIso]){var _hr=S.slot?S.slot.split(' à ')[1]||'':'';S.slots[S.slotIso].forEach(function(s){if(s.time===_hr)s.on=false;});saveSlots();}
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé. Acompte de '+S.acompte+'€ reçu. À très vite chez Honey Locks 🍯';
@@ -983,7 +985,7 @@ function pay(){
     })
   }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
-function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.inspo=false;S.fulaniFront=null;S.fulaniBack=null;S.clientInsta=null;S.clientEmail=null;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';document.getElementById('d-sans-coif').checked=false;document.getElementById('d-meches').checked=false;var _ow=document.getElementById('d-retwist-opts');if(_ow)_ow.style.display='none';goSub('v1',1)}
+function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.opts=[];S.optTotal=0;S.inspo=false;S.fulaniFront=null;S.fulaniBack=null;S.clientInsta=null;S.clientEmail=null;S.sansCoif=false;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';document.getElementById('d-meches').checked=false;var _ow=document.getElementById('d-retwist-opts');if(_ow)_ow.style.display='none';goSub('v1',1)}
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
