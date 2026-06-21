@@ -804,7 +804,7 @@ function submitDevis(){
   refreshAdmin();
   fetch('/api/devis',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({nom:insta,prenom:'',email:email,service:S.name,prix:'sur devis',
-      message:(notes?notes+'\n':'')+(count?count+' locks':'')})
+      message:(notes?notes+'\n':'')+(count?count+' locks':''),photos:S.curPhotos.slice()})
   }).then(function(r){
     if(r.status===409){
       S.reqs=S.reqs.filter(function(x){return x.email!==email;});
