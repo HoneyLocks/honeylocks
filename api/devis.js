@@ -128,7 +128,6 @@ module.exports = async (req, res) => {
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
               ${message ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Message</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${message}</td></tr>` : ''}
             </table>
-            ${Array.isArray(photos) && photos.length ? `<p style="margin-top:16px;font-weight:600">📸 Photos des locks :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${photos.map(src => `<img src="${src}" style="width:180px;height:180px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>` : ''}
             <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.fr">honeylocks.fr</a> pour envoyer le devis.</p>
           </div>
         `
