@@ -112,9 +112,6 @@ module.exports = async (req, res) => {
   console.log('Supabase reservation INSERT status:', sbRes.status)
   console.log('Supabase reservation INSERT response:', JSON.stringify(sbData))
 
-  // Répondre immédiatement après l'INSERT — emails envoyés en arrière-plan
-  res.status(200).json({ success: true })
-
   // Préparer les photos pour le mail Maïna
   const photosLocks = Array.isArray(curPhotos) && curPhotos.length
     ? `<p style="margin-top:16px;font-weight:600">🔒 Photos locks :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${curPhotos.map(src => `<img src="${src}" style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>`
@@ -173,8 +170,8 @@ module.exports = async (req, res) => {
 
   const transport = makeTransport()
 
-  // Emails en parallèle, en arrière-plan
-  Promise.all([
+  // Emails en parallèle (await — garantit l'envoi avant que Vercel ferme la Lambda)
+  await Promise.all([
     transport.sendMail({
       from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
       to: email,
@@ -217,4 +214,6 @@ module.exports = async (req, res) => {
       .then(() => console.log('Notif Maïna envoyée'))
       .catch(e => console.error('Notif email error:', e.message))
   ])
+
+  res.status(200).json({ success: true })
 }
