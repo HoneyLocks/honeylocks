@@ -899,7 +899,7 @@ function buildSlots(){
     }
     document.getElementById('slots').innerHTML=h||'<div class="note" style="text-align:center;border-left:none;background:rgba(201,168,76,.07);border-radius:10px;padding:22px;line-height:1.8">Aucun créneau disponible pour le moment, reviens bientôt 🍯</div>';
     closeDmModal();
-    var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=S.name+extra+' · '+S.price+'€';
+    var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=(S.name||'')+extra+(S.price?' · '+S.price+'€':'');
   }
   return fetch('/api/admin-bookings')
     .then(function(r){return r.json();})
