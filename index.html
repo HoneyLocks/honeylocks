@@ -236,6 +236,14 @@ textarea{resize:vertical;min-height:66px}
 .slot.selected{background:var(--honey);color:var(--dark);border-color:var(--honey);font-weight:500}
 .slot.taken{opacity:.28;text-decoration:line-through;cursor:not-allowed}
 .slot.dm{opacity:.55;cursor:pointer;font-size:12.5px}
+.dm-modal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;padding:24px}
+.dm-modal.open{display:flex}
+.dm-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+.dm-modal-box{position:relative;z-index:1;background:var(--anth);border:1px solid var(--border);border-radius:20px;padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.dm-modal-icon{font-size:36px;margin-bottom:14px}
+.dm-modal-txt{font-size:15px;color:var(--text);line-height:1.65;margin-bottom:22px}
+.dm-modal-txt strong{color:var(--honey-light)}
+.dm-modal-close{width:100%;background:linear-gradient(100deg,var(--honey),var(--honey-light));color:var(--dark);border:none;border-radius:99px;padding:14px;font-family:inherit;font-size:13px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
 
 .recap{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
 .rrow{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -597,7 +605,14 @@ textarea{resize:vertical;min-height:66px}
     <button class="sv-back" onclick="backFromSlot()">←</button>
     <h2>Choisis ton créneau</h2><p class="sub" id="slot-sub"></p>
     <div id="slots"></div>
-    <div id="dm-note" class="note" style="display:none;margin-top:12px">Pour une réservation aujourd'hui ou demain après 20h, contacte-moi directement en DM sur Instagram <strong>@honeylocks__</strong> 🍯</div>
+    <div class="dm-modal" id="dm-modal" onclick="if(event.target===this)closeDmModal()">
+      <div class="dm-modal-bg" onclick="closeDmModal()"></div>
+      <div class="dm-modal-box">
+        <div class="dm-modal-icon">💬</div>
+        <div class="dm-modal-txt" id="dm-modal-txt"></div>
+        <button class="dm-modal-close" onclick="closeDmModal()">Fermer</button>
+      </div>
+    </div>
     <div class="brow"><button class="btn ghost" onclick="backFromSlot()">Retour</button></div>
   </div>
 
@@ -872,7 +887,8 @@ function buildSlots(){
         h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
         avail.forEach(function(s){
           if(isDm){
-            h+='<div class="slot dm" onclick="dmSlot()">💬 '+s.time+'<\/div>';
+            var dmType=iso===isoToday?'today':'tomorrow';
+            h+='<div class="slot dm" onclick="dmSlot(\''+dmType+'\')">💬 '+s.time+'<\/div>';
           } else {
             h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';
           }
@@ -882,7 +898,7 @@ function buildSlots(){
       d.setDate(d.getDate()+1);
     }
     document.getElementById('slots').innerHTML=h||'<div class="note" style="text-align:center;border-left:none;background:rgba(201,168,76,.07);border-radius:10px;padding:22px;line-height:1.8">Aucun créneau disponible pour le moment, reviens bientôt 🍯</div>';
-    document.getElementById('dm-note').style.display='none';
+    closeDmModal();
     var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=S.name+extra+' · '+S.price+'€';
   }
   return fetch('/api/admin-bookings')
@@ -897,7 +913,12 @@ function buildSlots(){
     });
 }
 function backFromSlot(){if(S.type==='devis')goSub('vcheck',2);else goSub('vopt',2);}
-function dmSlot(){var el=document.getElementById('dm-note');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},6000);}
+var DM_MSGS={
+  today:'Pour une réservation aujourd\'hui, contacte-moi en DM sur Instagram <strong>@honeylocks__</strong> 🍯',
+  tomorrow:'Il est 20h passé, pour réserver demain contacte-moi en DM sur Instagram <strong>@honeylocks__</strong> 🍯'
+};
+function dmSlot(type){document.getElementById('dm-modal-txt').innerHTML=DM_MSGS[type]||DM_MSGS.today;document.getElementById('dm-modal').classList.add('open');}
+function closeDmModal(){document.getElementById('dm-modal').classList.remove('open');}
 function pickSlot(el,day,time,iso){document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected')});el.classList.add('selected');S.slot=day+' à '+time;S.slotIso=iso||null;setTimeout(toRecap,80);}
 function toRecap(){
   if(S.type!=='devis'){
