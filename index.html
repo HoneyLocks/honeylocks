@@ -838,11 +838,18 @@ function loginExisting(){
         S.quotedName=data.name||em.split('@')[0];
         var _bp=data.price;
         res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+_bp+'€</strong>.</div>'
-          +'<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:14px 0 0">'
+          +'<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:14px 0 4px">'
+          +'<input type="checkbox" id="e-meches" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">'
+          +'<span style="font-size:14px;color:var(--dim)">Vanilles + mèches bouclées <span style="color:var(--honey)">(+20€, mèches non comprises)</span></span>'
+          +'</label>'
+          +'<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:4px 0 14px">'
           +'<input type="checkbox" id="e-sans-coif" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">'
           +'<span style="font-size:14px;color:var(--dim)">Sans coiffure protectrice <span style="color:var(--honey)">(-5€)</span></span>'
           +'</label>'
+          +'<label style="font-size:13.5px;font-weight:600;display:block;margin-bottom:6px">As-tu une inspiration ? Montre-la moi 🍯 <span style="font-weight:400;color:var(--dim)">(optionnel)</span></label>'
+          +'<div class="photos" id="e-inspo"></div>'
           +'<button class="btn" style="margin-top:14px;width:100%" onclick="bookAfterDevis('+_bp+')">Réserver mon créneau →</button>';
+        S.inspoPhotos=[];buildPhotoGrid('e-inspo',3);
       } else {
         res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Email non reconnu.</strong><br>Tu n\'as pas encore de devis chez moi — <a onclick="goNewDevis()" style="color:var(--honey);cursor:pointer">clique ici pour en faire une demande</a>.</div>';
       }
@@ -851,7 +858,7 @@ function loginExisting(){
       res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Erreur réseau.</strong> Réessaie dans un instant.</div>';
     });
 }
-function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');S.sansCoif=sc?sc.checked:false;S.price=S.sansCoif?base-5:base;buildSlots().then(function(){goSub('vslot',3);});}
+function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var mc=document.getElementById('e-meches');S.sansCoif=sc?sc.checked:false;S.opts=[];if(mc&&mc.checked)S.opts.push({name:'Vanilles + mèches bouclées',price:20});S.price=base+(mc&&mc.checked?20:0)-(S.sansCoif?5:0);buildSlots().then(function(){goSub('vslot',3);});}
 function simQuote(){S.price=65;buildSlots().then(function(){goSub('vslot',3);});}
 
 function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
