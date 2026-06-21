@@ -28,6 +28,11 @@ module.exports = async (req, res) => {
           price: prix
         })
       }
+
+      // Devis soumis mais pas encore chiffré
+      if (rdv.statut === 'devis') {
+        return res.status(200).json({ pending: true })
+      }
     }
 
     res.status(200).json({ found: false })

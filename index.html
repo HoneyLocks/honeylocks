@@ -852,6 +852,8 @@ function loginExisting(){
           +'<div class="photos" id="e-inspo"></div>'
           +'<button class="btn" style="margin-top:14px;width:100%" onclick="bookAfterDevis('+_bp+')">Réserver mon créneau →</button>';
         S.inspoPhotos=[];buildPhotoGrid('e-inspo',3);
+      } else if(data && data.pending){
+        res.innerHTML='<div class="note" style="margin-top:0"><strong>Ta demande est en cours 🍯</strong><br>Je l\'ai bien reçue et je te reviens très vite avec ton devis personnalisé. Pense à vérifier tes spams !</div>';
       } else {
         res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Email non reconnu.</strong><br>Tu n\'as pas encore de devis chez moi — <a onclick="goNewDevis()" style="color:var(--honey);cursor:pointer">clique ici pour en faire une demande</a>.</div>';
       }
