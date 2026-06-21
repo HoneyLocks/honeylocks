@@ -115,11 +115,27 @@ module.exports = async (req, res) => {
     ))
   }
 
-  // ── POST : annulation depuis l'admin (comportement existant) ──
+  // ── POST : annulation depuis l'admin ──
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, email, service, slot } = req.body
+  const { nom, email, service, slot, date_rdv, booking_id } = req.body
   if (!email) return res.status(400).json({ error: 'email requis' })
+
+  // Supprimer de Supabase (par ID si disponible, sinon par email+date)
+  try {
+    const delUrl = booking_id
+      ? `${process.env.SUPABASE_URL}/rest/v1/reservations?id=eq.${booking_id}`
+      : date_rdv
+        ? `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=eq.${encodeURIComponent(email)}&date_rdv=eq.${date_rdv}&statut=eq.confirm%C3%A9`
+        : null
+    if (delUrl) {
+      await fetch(delUrl, {
+        method: 'DELETE',
+        headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` }
+      })
+      console.log('[annulation] Supabase DELETE effectué')
+    }
+  } catch (e) { console.error('[annulation] Supabase DELETE error:', e.message) }
 
   try {
     await makeTransport().sendMail({
