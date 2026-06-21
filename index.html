@@ -185,6 +185,7 @@ textarea{resize:vertical;min-height:66px}
 .slot:active{transform:scale(.96)}
 .slot.selected{background:var(--honey);color:var(--dark);border-color:var(--honey);font-weight:500}
 .slot.taken{opacity:.28;text-decoration:line-through;cursor:not-allowed}
+.slot.dm{opacity:.55;cursor:pointer;font-size:12.5px}
 
 .recap{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
 .rrow{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -546,6 +547,7 @@ textarea{resize:vertical;min-height:66px}
     <button class="sv-back" onclick="backFromSlot()">←</button>
     <h2>Choisis ton créneau</h2><p class="sub" id="slot-sub"></p>
     <div id="slots"></div>
+    <div id="dm-note" class="note" style="display:none;margin-top:12px">Pour une réservation aujourd'hui ou demain après 20h, contacte-moi directement en DM sur Instagram <strong>@honeylocks__</strong> 🍯</div>
     <div class="brow"><button class="btn ghost" onclick="backFromSlot()">Retour</button></div>
   </div>
 
@@ -801,9 +803,13 @@ function initSlots(){
 function buildSlots(){
   var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   var moisFr=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  var today=new Date();today.setHours(0,0,0,0);
-  var start=new Date(today);start.setDate(today.getDate()+1);
+  var now=new Date();
+  var today=new Date(now);today.setHours(0,0,0,0);
+  var start=new Date(today);
   var endMonth=new Date(today.getFullYear(),today.getMonth()+2,0);
+  var isoToday=isoFmt(today);
+  var isoTomorrow=isoFmt(new Date(today.getFullYear(),today.getMonth(),today.getDate()+1));
+  var after20=now.getHours()>=20;
   initSlotsForRange(start,endMonth);
   function _render(){
     var h='';var d=new Date(start.getTime());
@@ -811,14 +817,22 @@ function buildSlots(){
       var iso=isoFmt(d);
       var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
       var avail=(S.slots[iso]||[]).filter(function(s){return s.on;});
+      var isDm=(iso===isoToday)||(iso===isoTomorrow&&after20);
       if(avail.length){
         h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
-        avail.forEach(function(s){h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';});
+        avail.forEach(function(s){
+          if(isDm){
+            h+='<div class="slot dm" onclick="dmSlot()">💬 '+s.time+'<\/div>';
+          } else {
+            h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';
+          }
+        });
         h+='</div></div>';
       }
       d.setDate(d.getDate()+1);
     }
     document.getElementById('slots').innerHTML=h||'<div class="note" style="text-align:center;border-left:none;background:rgba(201,168,76,.07);border-radius:10px;padding:22px;line-height:1.8">Aucun créneau disponible pour le moment, reviens bientôt 🍯</div>';
+    document.getElementById('dm-note').style.display='none';
     var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=S.name+extra+' · '+S.price+'€';
   }
   return fetch('/api/admin-bookings')
@@ -833,6 +847,7 @@ function buildSlots(){
     });
 }
 function backFromSlot(){if(S.type==='devis')goSub('vcheck',2);else goSub('vopt',2);}
+function dmSlot(){var el=document.getElementById('dm-note');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(function(){el.style.display='none';},6000);}
 function pickSlot(el,day,time,iso){document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected')});el.classList.add('selected');S.slot=day+' à '+time;S.slotIso=iso||null;setTimeout(toRecap,80);}
 function toRecap(){
   if(S.type!=='devis'){
