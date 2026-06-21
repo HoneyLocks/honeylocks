@@ -61,6 +61,8 @@ module.exports = async (req, res) => {
     if (sbRes.status >= 400) {
       return res.status(500).json({ error: 'Supabase insert failed', detail: sbData })
     }
+    // Répondre immédiatement après INSERT — emails envoyés en arrière-plan
+    res.status(200).json({ success: true })
   } else {
     // Envoi du prix par l'admin : PATCH la ligne existante
     const patchRes = await fetch(
@@ -78,6 +80,8 @@ module.exports = async (req, res) => {
     console.log('[devis] Supabase PATCH prix status:', patchRes.status)
   }
 
+  // Pour l'envoi de prix (isQuote), on répond après les emails car c'est un cas rare admin
+  // Pour les nouvelles demandes, la réponse a déjà été envoyée ci-dessus
   const prenom_ = prenom || nom || 'toi'
 
   const htmlBody = isQuote
@@ -100,43 +104,37 @@ module.exports = async (req, res) => {
         <p style="color:#999;font-size:12px">Honey Locks · Lyon · Disponible 7j/7</p>
       </div>`
 
-  try {
-    console.log('[devis] envoi mail à', email, '— isQuote:', isQuote)
-    const info = await makeTransport().sendMail({
+  const transport = makeTransport()
+
+  // Emails en arrière-plan (non bloquants pour la cliente)
+  Promise.all([
+    transport.sendMail({
       from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: isQuote ? '🍯 Ton devis Honey Locks' : '🍯 Demande reçue — Honey Locks',
       html: htmlBody
-    })
-    console.log('[devis] mail envoyé:', info.messageId)
-  } catch (e) {
-    console.error('[devis] erreur envoi mail:', e.message)
-  }
+    }).then(info => console.log('[devis] mail cliente envoyé:', info.messageId))
+      .catch(e => console.error('[devis] erreur mail cliente:', e.message)),
 
-  if (!isQuote) {
-    try {
-      await makeTransport().sendMail({
-        from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
-        to: process.env.GMAIL_USER,
-        subject: '🔔 Nouvelle demande de devis — ' + (nom || email),
-        html: `
-          <div style="font-family:sans-serif;max-width:500px;margin:0 auto;color:#222">
-            <h2 style="color:#c9a84c">Nouvelle demande de devis 🍯</h2>
-            <table style="width:100%;border-collapse:collapse">
-              <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
-              <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
-              <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
-              ${message ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Message</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${message}</td></tr>` : ''}
-            </table>
-            ${Array.isArray(photos) && photos.length ? `<p style="margin-top:16px;font-weight:600">📸 Photos des locks :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${photos.map(src => `<img src="${src}" style="width:180px;height:180px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>` : ''}
-            <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.fr">honeylocks.fr</a> pour envoyer le devis.</p>
-          </div>
-        `
-      })
-    } catch (e) {
-      console.error('[devis] erreur notif Maïna:', e.message)
-    }
-  }
+    !isQuote ? transport.sendMail({
+      from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      subject: '🔔 Nouvelle demande de devis — ' + (nom || email),
+      html: `
+        <div style="font-family:sans-serif;max-width:500px;margin:0 auto;color:#222">
+          <h2 style="color:#c9a84c">Nouvelle demande de devis 🍯</h2>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
+            ${message ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Message</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${message}</td></tr>` : ''}
+          </table>
+          ${Array.isArray(photos) && photos.length ? `<p style="margin-top:16px;font-weight:600">📸 Photos des locks :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${photos.map(src => `<img src="${src}" style="width:180px;height:180px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>` : ''}
+          <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.fr">honeylocks.fr</a> pour envoyer le devis.</p>
+        </div>
+      `
+    }).catch(e => console.error('[devis] erreur notif Maïna:', e.message)) : Promise.resolve()
+  ])
 
-  res.status(200).json({ success: true })
+  if (isQuote) res.status(200).json({ success: true })
 }

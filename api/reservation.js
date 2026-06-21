@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte, baseService, baseSize, optsData } = req.body
+  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte, baseService, baseSize, optsData, curPhotos, inspoPhotos } = req.body
   const token = generateToken()
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
   const prixNum = parseFloat(prixStr) || 0
@@ -112,9 +112,70 @@ module.exports = async (req, res) => {
   console.log('Supabase reservation INSERT status:', sbRes.status)
   console.log('Supabase reservation INSERT response:', JSON.stringify(sbData))
 
-  // Email de confirmation à la cliente
-  try {
-    const info = await makeTransport().sendMail({
+  // Répondre immédiatement après l'INSERT — emails envoyés en arrière-plan
+  res.status(200).json({ success: true })
+
+  // Préparer les photos pour le mail Maïna
+  const photosLocks = Array.isArray(curPhotos) && curPhotos.length
+    ? `<p style="margin-top:16px;font-weight:600">🔒 Photos locks :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${curPhotos.map(src => `<img src="${src}" style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>`
+    : ''
+  const photosInspo = Array.isArray(inspoPhotos) && inspoPhotos.length
+    ? `<p style="margin-top:14px;font-weight:600">💫 Photos inspiration :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${inspoPhotos.map(src => `<img src="${src}" style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>`
+    : ''
+
+  // ICS pour Maïna
+  const dtstart = icsDate(date_rdv, heure_rdv)
+  let dtend = dtstart
+  if (dtstart) {
+    const timePart = dtstart.slice(9, 15)
+    const h = parseInt(timePart.slice(0, 2), 10) + 2
+    dtend = dtstart.slice(0, 9) + String(h).padStart(2, '0') + timePart.slice(2)
+  }
+  const uid = 'honeylocks-' + Date.now() + '@honeylocks.vercel.app'
+  const clientLabel = nom ? '@' + nom : (email || 'Cliente')
+  const icsContent = dtstart ? buildIcs({
+    uid,
+    summary: (service || 'RDV') + ' — ' + clientLabel,
+    description: 'Cliente : ' + clientLabel + '\\nEmail : ' + (email || '—') + '\\nPrix : ' + prixNum + '€\\nAcompte : ' + acompteNum + '€',
+    dtstart,
+    dtend,
+  }) : null
+
+  const notifMailOpts = {
+    from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
+    to: process.env.GMAIL_USER,
+    subject: '🔔 Nouvelle réservation — ' + (nom || email),
+    html: `
+      <div style="font-family:sans-serif;max-width:500px;margin:0 auto;color:#222">
+        <h2 style="color:#c9a84c">Nouvelle réservation 🍯</h2>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
+          ${buildServiceRows(service, baseService, baseSize, optsData)}
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv || '—'}</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv || '—'}</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prixNum}€</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste à payer le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c;font-size:17px"><strong>${resteNum}€</strong></td></tr>
+        </table>
+        ${photosLocks}${photosInspo}
+        ${icsContent ? '<p style="margin-top:16px;font-size:13px;color:#666">📅 Pièce jointe .ics — ouvre-la pour ajouter le RDV à ton calendrier.</p>' : ''}
+      </div>
+    `,
+  }
+  if (icsContent) {
+    notifMailOpts.attachments = [{
+      filename: 'rdv-honeylocks.ics',
+      content: icsContent,
+      contentType: 'application/octet-stream',
+    }]
+  }
+
+  const transport = makeTransport()
+
+  // Emails en parallèle, en arrière-plan
+  Promise.all([
+    transport.sendMail({
       from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: '✅ Rendez-vous confirmé — Honey Locks',
@@ -149,68 +210,11 @@ module.exports = async (req, res) => {
           <p style="color:#999;font-size:12px;margin-top:16px">Honey Locks · Lyon · Disponible 7j/7</p>
         </div>
       `
-    })
-    console.log('Email sent:', info.messageId)
-  } catch (e) {
-    console.error('Email error:', e.message)
-  }
+    }).then(info => console.log('Email cliente envoyé:', info.messageId))
+      .catch(e => console.error('Email cliente error:', e.message)),
 
-  // Notification à Maïna avec pièce jointe .ics
-  try {
-    const dtstart = icsDate(date_rdv, heure_rdv)
-
-    // Calcul DTEND = DTSTART + 2h
-    let dtend = dtstart
-    if (dtstart) {
-      const [datePart, timePart] = [dtstart.slice(0, 8), dtstart.slice(9, 15)]
-      const h = parseInt(timePart.slice(0, 2), 10) + 2
-      dtend = datePart + 'T' + String(h).padStart(2, '0') + timePart.slice(2)
-    }
-
-    const uid = 'honeylocks-' + Date.now() + '@honeylocks.vercel.app'
-    const clientLabel = nom ? '@' + nom : (email || 'Cliente')
-    const icsContent = dtstart ? buildIcs({
-      uid,
-      summary: (service || 'RDV') + ' — ' + clientLabel,
-      description: 'Cliente : ' + clientLabel + '\\nEmail : ' + (email || '—') + '\\nPrix : ' + prixNum + '€\\nAcompte : ' + acompteNum + '€',
-      dtstart,
-      dtend,
-    }) : null
-
-    const mailOpts = {
-      from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER,
-      subject: '🔔 Nouvelle réservation — ' + (nom || email),
-      html: `
-        <div style="font-family:sans-serif;max-width:500px;margin:0 auto;color:#222">
-          <h2 style="color:#c9a84c">Nouvelle réservation 🍯</h2>
-          <table style="width:100%;border-collapse:collapse">
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Instagram</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${nom || '—'}</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Email</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${email}</td></tr>
-            ${buildServiceRows(service, baseService, baseSize, optsData)}
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv || '—'}</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv || '—'}</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prixNum}€</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
-            <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste à payer le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c;font-size:17px"><strong>${resteNum}€</strong></td></tr>
-          </table>
-          ${icsContent ? '<p style="margin-top:16px;font-size:13px;color:#666">📅 Pièce jointe .ics — ouvre-la pour ajouter le RDV à ton calendrier.</p>' : ''}
-        </div>
-      `,
-    }
-
-    if (icsContent) {
-      mailOpts.attachments = [{
-        filename: 'rdv-honeylocks.ics',
-        content: icsContent,
-        contentType: 'application/octet-stream',
-      }]
-    }
-
-    await makeTransport().sendMail(mailOpts)
-  } catch (e) {
-    console.error('Notif email error:', e.message)
-  }
-
-  res.status(200).json({ success: true })
+    transport.sendMail(notifMailOpts)
+      .then(() => console.log('Notif Maïna envoyée'))
+      .catch(e => console.error('Notif email error:', e.message))
+  ])
 }

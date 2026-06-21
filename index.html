@@ -957,7 +957,7 @@ function pay(){
   var bkNom=S.clientInsta||S.quotedName||'Cliente';
   var _optsStr=S.opts.map(function(o){return o.name+(o.price?' (+'+o.price+'€)':'');}).join(' · ');
   var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
-  S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail});
+  S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail,curPhotos:S.curPhotos.slice(),inspoPhotos:S.inspoPhotos.slice()});
   if(S.slotIso&&S.slots[S.slotIso]){var _hr=S.slot?S.slot.split(' à ')[1]||'':'';S.slots[S.slotIso].forEach(function(s){if(s.time===_hr)s.on=false;});saveSlots();}
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé. Acompte de '+S.acompte+'€ reçu. À très vite chez Honey Locks 🍯';
   refreshAdmin();goSub('vdone',4);
@@ -978,7 +978,9 @@ function pay(){
       acompte:S.acompte+'€',
       baseService:S.name,
       baseSize:S.size||null,
-      optsData:S.opts
+      optsData:S.opts,
+      curPhotos:S.curPhotos.slice(),
+      inspoPhotos:S.inspoPhotos.slice()
     })
   }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
@@ -1014,6 +1016,8 @@ function refreshAdmin(){
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
+    if(bk.curPhotos&&bk.curPhotos.length){bkExtra+='<div class="rqd">🔒 Photos locks ('+bk.curPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.curPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
+    if(bk.inspoPhotos&&bk.inspoPhotos.length){bkExtra+='<div class="rqd">💫 Photos inspiration ('+bk.inspoPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.inspoPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">✅ Acompte reçu</button>';
     if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
     b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
@@ -1146,7 +1150,7 @@ function sendRappel(id){
 }
 /* Persistence S.bookings via localStorage */
 function saveBookings(){
-  try{localStorage.setItem('hl_bookings',JSON.stringify(S.bookings));}catch(e){}
+  try{localStorage.setItem('hl_bookings',JSON.stringify(S.bookings.map(function(b){var c=Object.assign({},b);delete c.curPhotos;delete c.inspoPhotos;return c;})));}catch(e){}
 }
 /* Persistence S.slots via localStorage */
 function saveSlots(){
