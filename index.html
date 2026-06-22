@@ -1167,7 +1167,7 @@ function markAcompte(id,paid){
   fetch('/api/acompte',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking_id:id,paid:paid})})
     .then(function(r){return r.json()})
     .then(function(d){
-      if(d.success){var bk=S.bookings.find(function(b){return b.id===id||b.id===String(id)});if(bk)bk.acomptePaye=paid;refreshAdmin();}
+      if(d.success){var bk=S.bookings.find(function(b){return b.id==id});if(bk)bk.acomptePaye=paid;refreshAdmin();}
       else alert('Erreur lors de la mise à jour.');
     }).catch(function(){alert('Erreur réseau.');});
 }
