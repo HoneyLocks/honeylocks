@@ -285,7 +285,7 @@ textarea{resize:vertical;min-height:66px}
 .bk .meta{font-size:12px;color:var(--dim);margin-bottom:8px}
 .bk-actions{display:flex;gap:8px;flex-wrap:wrap}
 .bk-actions button{flex:1;min-width:46%;border:none;border-radius:9px;padding:9px;font-family:inherit;font-size:12px;cursor:pointer}
-.bk-ok{background:var(--success);color:#fff}.bk-rappel{background:rgba(201,168,76,.15);color:var(--honey);border:1px solid rgba(201,168,76,.3)!important}.bk-del{background:rgba(196,106,90,.2);color:var(--danger);border:1px solid rgba(196,106,90,.3)!important}
+.bk-ok{background:rgba(255,255,255,.07);color:var(--dim);border:1px solid var(--border)!important}.bk-ok.paid{background:var(--success);color:#fff;border-color:var(--success)!important}.bk-rappel{background:rgba(201,168,76,.15);color:var(--honey);border:1px solid rgba(201,168,76,.3)!important}.bk-del{background:rgba(196,106,90,.2);color:var(--danger);border:1px solid rgba(196,106,90,.3)!important}
 .empty{font-size:13px;color:var(--dim);text-align:center;padding:24px 0}
 .aday{margin-bottom:18px}
 .aday-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -1033,7 +1033,7 @@ function refreshAdmin(){
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
     if(bk.curPhotos&&bk.curPhotos.length){bkExtra+='<div class="rqd">🔒 Photos locks ('+bk.curPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.curPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     if(bk.inspoPhotos&&bk.inspoPhotos.length){bkExtra+='<div class="rqd">💫 Photos inspiration ('+bk.inspoPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.inspoPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
-    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions">'+(bk.acomptePaye?'<span style="color:var(--success);font-size:13px;font-weight:600">✅ Acompte confirmé</span>':'<button class="bk-ok" onclick="markAcompte(\''+bk.id+'\')">✅ Acompte reçu</button>');
+    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok'+(bk.acomptePaye?' paid':'')+'" onclick="markAcompte(\''+bk.id+'\','+(!bk.acomptePaye)+')">'+(bk.acomptePaye?'✅ Acompte reçu':'⏳ Acompte reçu')+'</button>';
     if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
     b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
   });
@@ -1163,11 +1163,11 @@ function sendRappel(id){
     else alert('Erreur : '+( d.error||'inconnue'));
   }).catch(function(){alert('Erreur réseau.');});
 }
-function markAcompte(id){
-  fetch('/api/acompte',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking_id:id})})
+function markAcompte(id,paid){
+  fetch('/api/acompte',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking_id:id,paid:paid})})
     .then(function(r){return r.json()})
     .then(function(d){
-      if(d.success){var bk=S.bookings.find(function(b){return b.id===id||b.id===String(id)});if(bk)bk.acomptePaye=true;refreshAdmin();}
+      if(d.success){var bk=S.bookings.find(function(b){return b.id===id||b.id===String(id)});if(bk)bk.acomptePaye=paid;refreshAdmin();}
       else alert('Erreur lors de la mise à jour.');
     }).catch(function(){alert('Erreur réseau.');});
 }

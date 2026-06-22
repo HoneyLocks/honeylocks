@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { booking_id } = req.body
+  const { booking_id, paid } = req.body
   if (!booking_id) return res.status(400).json({ error: 'booking_id requis' })
 
   const patchRes = await fetch(
@@ -18,9 +18,9 @@ module.exports = async (req, res) => {
         'apikey': process.env.SUPABASE_KEY,
         'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
       },
-      body: JSON.stringify({ acompte_paye: true })
+      body: JSON.stringify({ acompte_paye: paid === true || paid === 'true' })
     }
   )
-  console.log('[acompte] PATCH id=', booking_id, 'status=', patchRes.status)
+  console.log('[acompte] PATCH id=', booking_id, 'paid=', paid, 'status=', patchRes.status)
   res.status(patchRes.ok ? 200 : 500).json({ success: patchRes.ok })
 }
