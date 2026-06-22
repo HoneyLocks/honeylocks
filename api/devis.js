@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
         service: service,
         prix: prixStr,
         statut: 'devis',
-        notes: message || null
+        notes: JSON.stringify({ message: message || null, photos: Array.isArray(photos) ? photos : [] })
       })
     })
     const sbData = await sbRes.json()

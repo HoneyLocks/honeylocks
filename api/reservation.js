@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
       statut: 'confirmé',
       acompte_paye: false,
       token_annulation: token,
-      notes: JSON.stringify({ baseService: baseService || null, baseSize: baseSize || null, opts: optsData || [], acompte: acompteNum })
+      notes: JSON.stringify({ baseService: baseService || null, baseSize: baseSize || null, opts: optsData || [], acompte: acompteNum, curPhotos: Array.isArray(curPhotos) ? curPhotos : [], inspoPhotos: Array.isArray(inspoPhotos) ? inspoPhotos : [] })
     })
   })
   const sbData = await sbRes.json()
