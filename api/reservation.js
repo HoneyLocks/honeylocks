@@ -112,13 +112,7 @@ module.exports = async (req, res) => {
   console.log('Supabase reservation INSERT status:', sbRes.status)
   console.log('Supabase reservation INSERT response:', JSON.stringify(sbData))
 
-  // Préparer les photos pour le mail Maïna
-  const photosLocks = Array.isArray(curPhotos) && curPhotos.length
-    ? `<p style="margin-top:16px;font-weight:600">🔒 Photos locks :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${curPhotos.map(src => `<img src="${src}" style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>`
-    : ''
-  const photosInspo = Array.isArray(inspoPhotos) && inspoPhotos.length
-    ? `<p style="margin-top:14px;font-weight:600">💫 Photos inspiration :</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">${inspoPhotos.map(src => `<img src="${src}" style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`).join('')}</div>`
-    : ''
+  // Photos disponibles dans l'espace admin du site (via notes JSON en Supabase), pas dans les mails
 
   // ICS pour Maïna
   const dtstart = icsDate(date_rdv, heure_rdv)
@@ -155,7 +149,6 @@ module.exports = async (req, res) => {
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste à payer le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c;font-size:17px"><strong>${resteNum}€</strong></td></tr>
         </table>
-        ${photosLocks}${photosInspo}
         ${icsContent ? '<p style="margin-top:16px;font-size:13px;color:#666">📅 Pièce jointe .ics — ouvre-la pour ajouter le RDV à ton calendrier.</p>' : ''}
       </div>
     `,
