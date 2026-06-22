@@ -838,6 +838,7 @@ function loginExisting(){
     .then(function(data){
       if(data && data.price){
         S.quotedName=data.name||em.split('@')[0];
+        S.name=data.service||null;
         var _bp=data.price;
         res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé : <strong style="color:var(--honey-light)">'+_bp+'€</strong>.</div>'
           +'<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:14px 0 4px">'
@@ -862,7 +863,7 @@ function loginExisting(){
       res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Erreur réseau.</strong> Réessaie dans un instant.</div>';
     });
 }
-function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var mc=document.getElementById('e-meches');S.sansCoif=sc?sc.checked:false;S.opts=[];if(mc&&mc.checked)S.opts.push({name:'Vanilles + mèches bouclées',price:20});S.price=base+(mc&&mc.checked?20:0)-(S.sansCoif?5:0);buildSlots().then(function(){goSub('vslot',3);});}
+function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var mc=document.getElementById('e-meches');S.sansCoif=sc?sc.checked:false;S.acompte=ACOMPTE_DEVIS;S.opts=[];if(mc&&mc.checked)S.opts.push({name:'Vanilles + mèches bouclées',price:20});S.price=base+(mc&&mc.checked?20:0)-(S.sansCoif?5:0);buildSlots().then(function(){goSub('vslot',3);});}
 function simQuote(){S.price=65;buildSlots().then(function(){goSub('vslot',3);});}
 
 function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -971,7 +972,7 @@ function pay(){
   var bkNom=S.clientInsta||S.quotedName||'Cliente';
   var _optsStr=S.opts.map(function(o){return o.name+(o.price?' (+'+o.price+'€)':'');}).join(' · ');
   var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
-  S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail,curPhotos:S.curPhotos.slice(),inspoPhotos:S.inspoPhotos.slice()});
+  S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,slotIso:S.slotIso,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail,acomptePaye:false,curPhotos:S.curPhotos.slice(),inspoPhotos:S.inspoPhotos.slice()});
   if(S.slotIso&&S.slots[S.slotIso]){var _hr=S.slot?S.slot.split(' à ')[1]||'':'';S.slots[S.slotIso].forEach(function(s){if(s.time===_hr)s.on=false;});saveSlots();}
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé. Acompte de '+S.acompte+'€ reçu. À très vite chez Honey Locks 🍯';
   refreshAdmin();goSub('vdone',4);
@@ -1002,7 +1003,7 @@ function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
-function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var notePhotos=Array.isArray(noteObj.photos)?noteObj.photos:[];var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:notePhotos});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl'))?20:10;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});}
+function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var notePhotos=Array.isArray(noteObj.photos)?noteObj.photos:[];var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:notePhotos});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl'))?20:10;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});}
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
 function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
 function refreshAdmin(){
@@ -1032,7 +1033,7 @@ function refreshAdmin(){
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
     if(bk.curPhotos&&bk.curPhotos.length){bkExtra+='<div class="rqd">🔒 Photos locks ('+bk.curPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.curPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     if(bk.inspoPhotos&&bk.inspoPhotos.length){bkExtra+='<div class="rqd">💫 Photos inspiration ('+bk.inspoPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.inspoPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
-    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok">✅ Acompte reçu</button>';
+    b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions">'+(bk.acomptePaye?'<span style="color:var(--success);font-size:13px;font-weight:600">✅ Acompte confirmé</span>':'<button class="bk-ok" onclick="markAcompte(\''+bk.id+'\')">✅ Acompte reçu</button>');
     if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
     b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
   });
@@ -1161,6 +1162,14 @@ function sendRappel(id){
     if(d.success)alert('Rappel envoyé à '+bk.email+' ✅');
     else alert('Erreur : '+( d.error||'inconnue'));
   }).catch(function(){alert('Erreur réseau.');});
+}
+function markAcompte(id){
+  fetch('/api/acompte',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking_id:id})})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.success){var bk=S.bookings.find(function(b){return b.id===id||b.id===String(id)});if(bk)bk.acomptePaye=true;refreshAdmin();}
+      else alert('Erreur lors de la mise à jour.');
+    }).catch(function(){alert('Erreur réseau.');});
 }
 /* Persistence S.bookings via localStorage */
 function saveBookings(){

@@ -25,7 +25,8 @@ module.exports = async (req, res) => {
       if (!isNaN(prix) && prix > 0) {
         return res.status(200).json({
           name: rdv.cliente_nom ? rdv.cliente_nom.trim().split(' ')[0] : email.split('@')[0],
-          price: prix
+          price: prix,
+          service: rdv.service || null
         })
       }
 
