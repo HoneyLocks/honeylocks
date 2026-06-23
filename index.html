@@ -875,11 +875,12 @@ function initSlotsForRange(start,end){
 function initSlots(){
   var today=new Date();today.setHours(0,0,0,0);
   var start=new Date(today);start.setDate(today.getDate()+1);
-  // Fenêtre par quinzaine : 1-15 ou 16-fin de mois
   var day=today.getDate();
-  var end=day<=15
-    ?new Date(today.getFullYear(),today.getMonth(),15)
-    :new Date(today.getFullYear(),today.getMonth()+1,0);
+  var lastDay=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  var end;
+  if(day>=Math.min(29,lastDay-1))end=new Date(today.getFullYear(),today.getMonth()+1,15);
+  else if(day>=14)end=new Date(today.getFullYear(),today.getMonth()+1,0);
+  else end=new Date(today.getFullYear(),today.getMonth(),15);
   initSlotsForRange(start,end);
 }
 function buildSlots(){
@@ -889,7 +890,11 @@ function buildSlots(){
   var today=new Date(now);today.setHours(0,0,0,0);
   var start=new Date(today);
   var _day=today.getDate();
-  var endMonth=_day<=15?new Date(today.getFullYear(),today.getMonth(),15):new Date(today.getFullYear(),today.getMonth()+1,0);
+  var _lastDay=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  var endMonth;
+  if(_day>=Math.min(29,_lastDay-1))endMonth=new Date(today.getFullYear(),today.getMonth()+1,15);
+  else if(_day>=14)endMonth=new Date(today.getFullYear(),today.getMonth()+1,0);
+  else endMonth=new Date(today.getFullYear(),today.getMonth(),15);
   var isoToday=isoFmt(today);
   var isoTomorrow=isoFmt(new Date(today.getFullYear(),today.getMonth(),today.getDate()+1));
   var after20=now.getHours()>=20;
