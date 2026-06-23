@@ -1082,8 +1082,7 @@ function renderSlotsAdmin(){
   var firstDay=new Date(_aCalYear,_aCalMonth,1);
   var lastDay=new Date(_aCalYear,_aCalMonth+1,0);
   initSlotsForRange(firstDay,lastDay);
-  var h='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="bk-del" style="flex:none;padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer" onclick="resetAllSlots()">🗑 Vider tous les créneaux</button></div>';
-  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">';
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">';
   h+='<button class="aday-add" onclick="prevCalMonth()" style="padding:5px 16px;font-size:18px">&#8249;</button>';
   h+='<span style="font-size:14px;font-weight:600;color:var(--honey-light)">'+moisFrLong[_aCalMonth]+' '+_aCalYear+'</span>';
   h+='<button class="aday-add" onclick="nextCalMonth()" style="padding:5px 16px;font-size:18px">&#8250;</button>';
@@ -1111,7 +1110,6 @@ function toggleSlotDay(iso,j){S.slots[iso][j].on=!S.slots[iso][j].on;renderSlots
 function updateSlotDay(iso,j,val){if(S.slots[iso]&&S.slots[iso][j])S.slots[iso][j].time=val.trim();}
 function removeSlotDay(iso,j){if(S.slots[iso]){S.slots[iso].splice(j,1);renderSlotsAdmin();}}
 function addSlotDay(iso){if(!S.slots[iso])S.slots[iso]=[];S.slots[iso].push({time:'',on:true});renderSlotsAdmin();}
-function resetAllSlots(){if(!confirm('Vider TOUS les créneaux ? Cette action est irréversible.'))return;S.slots={};localStorage.removeItem('hl_slots');renderSlotsAdmin();}
 
 function sendQuote(id){
   var v=document.getElementById('q-'+id).value;
