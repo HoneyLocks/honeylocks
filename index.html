@@ -888,7 +888,8 @@ function buildSlots(){
   var now=new Date();
   var today=new Date(now);today.setHours(0,0,0,0);
   var start=new Date(today);
-  var endMonth=new Date(today.getFullYear(),today.getMonth()+2,0);
+  var _day=today.getDate();
+  var endMonth=_day<=15?new Date(today.getFullYear(),today.getMonth(),15):new Date(today.getFullYear(),today.getMonth()+1,0);
   var isoToday=isoFmt(today);
   var isoTomorrow=isoFmt(new Date(today.getFullYear(),today.getMonth(),today.getDate()+1));
   var after20=now.getHours()>=20;
