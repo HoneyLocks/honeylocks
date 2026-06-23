@@ -875,7 +875,11 @@ function initSlotsForRange(start,end){
 function initSlots(){
   var today=new Date();today.setHours(0,0,0,0);
   var start=new Date(today);start.setDate(today.getDate()+1);
-  var end=new Date(today.getFullYear(),today.getMonth()+2,0);
+  // Fenêtre par quinzaine : 1-15 ou 16-fin de mois
+  var day=today.getDate();
+  var end=day<=15
+    ?new Date(today.getFullYear(),today.getMonth(),15)
+    :new Date(today.getFullYear(),today.getMonth()+1,0);
   initSlotsForRange(start,end);
 }
 function buildSlots(){
