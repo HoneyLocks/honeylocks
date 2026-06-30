@@ -33,8 +33,9 @@ module.exports = async (req, res) => {
     if (!r.ok) {
       const err = await r.text()
       console.error('[slots] upsert error:', r.status, err)
+      return res.status(500).json({ success: false, status: r.status, error: err })
     }
-    return res.status(r.ok ? 200 : 500).json({ success: r.ok })
+    return res.status(200).json({ success: true })
   }
 
   return res.status(405).end()
