@@ -1172,7 +1172,7 @@ function deleteDevis(id){
   if(!confirm('Supprimer ce devis ?'))return;
   S.reqs=S.reqs.filter(function(x){return x.id!==id});
   refreshAdmin();
-  fetch('/api/delete-devis?id='+encodeURIComponent(id),{method:'DELETE'}).catch(function(){});
+  fetch('/api/admin-devis?id='+encodeURIComponent(id),{method:'DELETE'}).catch(function(){});
 }
 function delBk(id){
   if(!confirm('Annuler ce rendez-vous ?'))return;
