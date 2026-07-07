@@ -402,7 +402,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="rule"><strong>Acompte obligatoire</strong><span>Aucun créneau n'est bloqué sans acompte. L'acompte est déduit du prix total le jour J.</span></div>
   <div class="rule"><strong>Cheveux propres et démêlés obligatoires</strong><span>Se présenter avec les cheveux propres, étirés et démêlés. Dans le cas contraire, la prestation peut être annulée et l'acompte non remboursé.</span></div>
   <div class="rule"><strong>Cheveux secs sans produits</strong><span>Venir avec les cheveux secs sans produits (sans cire, huile ni crème).</span></div>
-  <div class="rule"><strong>Brushing non pris ? Supplément possible</strong><span>Si le brushing n'a pas été réservé et que les cheveux ne sont pas étirés, un supplément de +10€ sera facturé.</span></div>
+  <div class="rule"><strong>Brushing non pris ? Supplément possible</strong><span>Si le brushing n'a pas été réservé et que les cheveux ne sont pas étirés, un supplément de +20€ sera facturé.</span></div>
   <div class="rule"><strong>Retard de plus de 20 min</strong><span>Supplément de 10€ facturé. Préviens-moi dès que possible si tu es en retard.</span></div>
   <div class="rule"><strong>Retard de plus de 30 min</strong><span>Rendez-vous annulé, acompte non remboursé.</span></div>
   <div class="rule"><strong>Paiement du solde en espèces</strong><span>Prévoir la monnaie le jour du rendez-vous.</span></div>
@@ -438,8 +438,8 @@ textarea{resize:vertical;min-height:66px}
       <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 2 · Flow</div><div class="svc-desc">Vagues, zigzag, courbes, un seul cœur + tresses droites<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
     <div class="svc" data-id="tresses-n3" data-name="Tresses N3 · Details" data-type="tresses-high" data-base="20" data-inspo="1" onclick="pick(this)">
       <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 3 · Details</div><div class="svc-desc">Croisements, croix, éclairs, petites tresses décoratives<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="tresses-n4" data-name="Tresses N4 · Signature" data-type="tresses-high" data-base="20" data-inspo="1" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 4 · Signature</div><div class="svc-desc">Fleurs, papillon, spirales, différents motifs combinés, designs rares<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
+    <div class="svc disabled" data-id="tresses-n4" data-name="Tresses N4 · Signature" data-type="tresses-high" data-base="20" data-inspo="1">
+      <div class="svc-info"><span class="pill soon">Bientôt</span><div class="svc-name">Niveau 4 · Signature</div><div class="svc-desc">Fleurs, papillon, spirales, différents motifs combinés, designs rares</div></div><div class="svc-price">Bientôt disponible 🔜</div></div>
 
     <div class="cat-title">Vanilles &amp; Twists</div>
     <div class="svc" data-id="vanilles-nattes" data-name="Vanilles / Nattes" data-type="vanille-taille" data-base="20" onclick="pick(this)">
@@ -466,10 +466,14 @@ textarea{resize:vertical;min-height:66px}
     <div id="size-block" style="display:none">
       <label>Taille des locks</label>
       <div class="chips">
-        <div class="chip" data-size="Small" onclick="pickSize(this)">Small <span style="font-size:10px;opacity:.65">+0€</span></div>
         <div class="chip" data-size="Medium" onclick="pickSize(this)">Medium <span style="font-size:10px;opacity:.65">+0€</span></div>
         <div class="chip" data-size="Large" onclick="pickSize(this)">Large <span style="font-size:10px;opacity:.65">+0€</span></div>
       </div>
+    </div>
+    <!-- Coiffure protectrice (départ de locks) -->
+    <div id="coif-prot-block" style="display:none">
+      <label>Option</label>
+      <div class="opt-row" data-opt="coif-prot" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">Coiffure protectrice</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
     </div>
     <!-- Taille Médium / Large (vanilles & nattes) -->
     <div id="vanille-taille-block" style="display:none">
@@ -523,7 +527,7 @@ textarea{resize:vertical;min-height:66px}
     <!-- Supplément brushing + longueur (masqués pour Fulani) -->
     <div id="brushing-block" style="display:none">
       <label>Supplément</label>
-      <div class="opt-row" data-opt="brushing" data-price="10" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="brushing" data-price="20" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+20€</div></div><div class="opt-check">✓</div></div>
       <div id="long-wrap" style="display:none">
         <div class="opt-row" data-opt="long" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
       </div>
@@ -682,6 +686,7 @@ function from1(){
   var isTLow=S.type==='tresses-low',isTHigh=S.type==='tresses-high',isBarrel=S.type==='barrel';
   var showInspo=isTHigh||(isTLow&&S.inspo);
   document.getElementById('size-block').style.display=isSize?'block':'none';
+  document.getElementById('coif-prot-block').style.display=isSize?'block':'none';
   document.getElementById('vanille-taille-block').style.display=isVT?'block':'none';
   document.getElementById('n12-block').style.display=isTLow?'block':'none';
   document.getElementById('n34-block').style.display=isTHigh?'block':'none';
@@ -1029,6 +1034,7 @@ function refreshAdmin(){
     if(r.sansCoif)h+='<div class="rqd">✂️ Sans coiffure (-5€)</div>';
     if(r.status==='pending')h+='<div class="qin"><input type="number" id="q-'+r.id+'" placeholder="Prix €" inputmode="numeric"><button onclick="sendQuote('+r.id+')">Envoyer</button></div>';
     else h+='<div class="rqd" style="color:var(--success)">✓ Devis : '+r.price+'€ — peut réserver librement</div>';
+    h+='<div class="bk-actions" style="margin-top:8px"><button class="bk-del" onclick="deleteDevis(\''+r.id+'\')">🗑 Supprimer</button></div>';
     h+='</div>';
   });
   document.getElementById('areq').innerHTML=h||'<div class="empty">Aucune demande.</div>';
@@ -1161,6 +1167,12 @@ function sendQuote(id){
   }).then(function(d){
     console.log('sendQuote: réponse API body=',JSON.stringify(d));
   }).catch(function(e){console.log('sendQuote: erreur fetch',e);});
+}
+function deleteDevis(id){
+  if(!confirm('Supprimer ce devis ?'))return;
+  S.reqs=S.reqs.filter(function(x){return x.id!==id});
+  refreshAdmin();
+  fetch('/api/delete-devis?id='+encodeURIComponent(id),{method:'DELETE'}).catch(function(){});
 }
 function delBk(id){
   if(!confirm('Annuler ce rendez-vous ?'))return;
