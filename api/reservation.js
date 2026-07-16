@@ -191,6 +191,9 @@ module.exports = async (req, res) => {
       subject: '✅ Rendez-vous confirmé — Honey Locks',
       html: `
         <div style="font-family:sans-serif;max-width:500px;margin:0 auto">
+          <div style="background:#fff3cd;border-left:4px solid #ff8c00;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:20px">
+            <p style="margin:0;font-weight:700;color:#7a3f00;font-size:14px">⚠️ IMPORTANT : La réception de ce mail ne confirme pas le paiement de votre acompte. Votre rendez-vous ne sera confirmé qu'après réception de l'acompte sur PayPal. Si vous n'avez pas encore payé, merci de le faire dès maintenant.</p>
+          </div>
           <h2 style="color:#c9a84c">Honey Locks 🍯</h2>
           <p>Bonjour ${prenom || nom},</p>
           <p>Ton rendez-vous est confirmé !</p>

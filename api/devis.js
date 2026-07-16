@@ -7,6 +7,37 @@ function makeTransport() {
   })
 }
 
+async function uploadPhotoToStorage(base64, index) {
+  if (!base64 || !base64.startsWith('data:')) return base64
+  const match = base64.match(/^data:([^;]+);base64,(.+)$/)
+  if (!match) return base64
+  const mimeType = match[1]
+  const ext = mimeType.split('/')[1] || 'jpg'
+  const buf = Buffer.from(match[2], 'base64')
+  const filename = `devis-${Date.now()}-${index}.${ext}`
+  try {
+    const uploadRes = await fetch(
+      `${process.env.SUPABASE_URL}/storage/v1/object/photos-devis/${filename}`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': process.env.SUPABASE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+          'Content-Type': mimeType,
+          'x-upsert': 'true'
+        },
+        body: buf
+      }
+    )
+    if (uploadRes.ok) {
+      return `${process.env.SUPABASE_URL}/storage/v1/object/public/photos-devis/${filename}`
+    }
+  } catch (e) {
+    console.error('[devis] upload photo erreur:', e.message)
+  }
+  return base64
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -38,6 +69,11 @@ module.exports = async (req, res) => {
   }
 
   if (!isQuote) {
+    // Upload des photos vers Supabase Storage avant insertion
+    const uploadedPhotos = await Promise.all(
+      (Array.isArray(photos) ? photos : []).map((p, i) => uploadPhotoToStorage(p, i))
+    )
+
     // Nouvelle demande : INSERT (bloquant — sécurité)
     const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
       method: 'POST',
@@ -53,7 +89,7 @@ module.exports = async (req, res) => {
         service: service,
         prix: prixStr,
         statut: 'devis',
-        notes: JSON.stringify({ message: message || null, photos: Array.isArray(photos) ? photos : [] })
+        notes: JSON.stringify({ message: message || null, photos: uploadedPhotos })
       })
     })
     const sbData = await sbRes.json()

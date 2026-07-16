@@ -577,7 +577,8 @@ textarea{resize:vertical;min-height:66px}
     <div class="ig-wrap"><span class="at">@</span><input type="text" id="d-insta" placeholder="ton pseudo"></div>
     <label>Email <span class="lopt">(pour recevoir ton devis)</span></label><input type="email" id="d-email" placeholder="ton@email.com" inputmode="email" oninput="checkDevis()">
     <div id="d-dup-err" class="note" style="display:none;border-left-color:var(--honey);margin-top:8px;font-size:13px"></div>
-    <label>Nombre de locks (environ)</label><input type="number" id="d-count" placeholder="ex : 120" inputmode="numeric">
+    <label>Nombre de locks (environ)</label><input type="number" id="d-count" placeholder="ex : 120" inputmode="numeric" min="1" oninput="checkDevis()">
+    <p class="note" style="font-size:12px;border-left-color:var(--honey);margin:6px 0 4px;line-height:1.6;padding:8px 12px">⚠️ Le nombre de locks approximatif est indispensable pour établir ton devis. Un nombre inexact ou trop bas ne sera pas pris en compte.</p>
     <label>Photos de tes locks <span class="lopt">(1 min, 3 max)</span></label>
     <div class="photos" id="photos-cur"></div>
     <p class="note" style="border-left-color:var(--honey);font-size:12.5px;margin:12px 0 10px;line-height:1.7">Chez Honey Locks, toutes les coiffures sans mèches sont au même prix. Le devis que tu recevras inclut le retwist + une coiffure protectrice.<br>Si tu ne veux pas de coiffure protectrice, tu pourras cocher l'option <strong>«&nbsp;Sans coiffure (−5€)&nbsp;»</strong> lors de la prise de rendez-vous.</p>
@@ -804,7 +805,8 @@ function checkDevis(){
     return;
   }
   errEl.style.display='none';
-  var valid=/.+@.+\..+/.test(email)&&S.curPhotos.length>=1;
+  var _dcount=parseInt(document.getElementById('d-count').value)||0;
+  var valid=/.+@.+\..+/.test(email)&&S.curPhotos.length>=1&&_dcount>=1;
   document.getElementById('bdevis').disabled=!valid;
 }
 function submitDevis(){
@@ -813,9 +815,10 @@ function submitDevis(){
   var errEl=document.getElementById('d-dup-err');
   var dup=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email.toLowerCase();});
   if(dup){errEl.style.display='block';errEl.innerHTML='Tu as déjà une demande en cours chez Honey Locks. Accède à ton espace via le bouton \'J\'ai reçu mon devis\' 🍯';return;}
+  var count=document.getElementById('d-count').value.trim();
+  if(!count||(parseInt(count)||0)<1){errEl.style.display='block';errEl.innerHTML='Le nombre de locks est obligatoire (minimum 1).';return;}
   btn.disabled=true;btn.textContent='Envoi…';
   var insta=document.getElementById('d-insta').value.trim()||'Cliente';
-  var count=document.getElementById('d-count').value.trim();
   var notes=document.getElementById('d-notes').value.trim();
   S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,sansCoif:false,avecMeches:false,status:'pending',price:null,photos:S.curPhotos.slice()});
   refreshAdmin();
@@ -1016,7 +1019,7 @@ function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
-function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var notePhotos=Array.isArray(noteObj.photos)?noteObj.photos:[];var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:notePhotos});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl'))?20:10;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});}
+function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var notePhotos=Array.isArray(noteObj.photos)?noteObj.photos:[];var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:notePhotos});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){S.bookings=[];rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl'))?20:10;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});}
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
 function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
 function refreshAdmin(){
@@ -1024,7 +1027,7 @@ function refreshAdmin(){
   var p=S.reqs.filter(function(r){return r.status==='pending'}).length;
   document.getElementById('st-p').textContent=p;document.getElementById('st-r').textContent=S.rdv;document.getElementById('st-c').textContent=S.ac+'€';
   var h='';
-  S.reqs.slice().reverse().forEach(function(r){
+  S.reqs.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
     h+='<div class="req '+r.status+'"><div class="rqh"><span class="rqn">@'+r.name+'</span><span class="rqs '+r.status+'">'+(r.status==='pending'?'À traiter':'Devis envoyé')+'</span></div>';
     h+='<div class="rqd">🔢 '+r.count+' locks</div>';
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
@@ -1039,18 +1042,22 @@ function refreshAdmin(){
   });
   document.getElementById('areq').innerHTML=h||'<div class="empty">Aucune demande.</div>';
   var b='';
-  if(!S.bookings.length)b='<div class="empty">Aucune réservation pour le moment.</div>';
-  S.bookings.slice().reverse().forEach(function(bk){
+  var _bkToday=new Date();_bkToday.setHours(0,0,0,0);var _bkTodayIso=isoFmt(_bkToday);
+  var _futureBks=S.bookings.slice().filter(function(bk){return!bk.slotIso||bk.slotIso>=_bkTodayIso;}).sort(function(a,b2){if(a.slotIso!==b2.slotIso)return(a.slotIso||'').localeCompare(b2.slotIso||'');return((a.slot||'').split(' à ')[1]||'').localeCompare(((b2.slot||'').split(' à ')[1])||'');});
+  _futureBks.forEach(function(bk){
     var bkMeta=bk.slot+' · '+bk.price+'€ · acompte '+bk.acompte+'€ reçu';
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
+    var _reqBk=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
+    if(_reqBk&&_reqBk.count&&_reqBk.count!=='?')bkExtra+='<div class="rqd">🔢 '+_reqBk.count+' locks</div>';
     if(bk.curPhotos&&bk.curPhotos.length){bkExtra+='<div class="rqd">🔒 Photos locks ('+bk.curPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.curPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     if(bk.inspoPhotos&&bk.inspoPhotos.length){bkExtra+='<div class="rqd">💫 Photos inspiration ('+bk.inspoPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.inspoPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok'+(bk.acomptePaye?' paid':'')+'" onclick="markAcompte(\''+bk.id+'\','+(!bk.acomptePaye)+')">'+(bk.acomptePaye?'✅ Acompte reçu':'⏳ Acompte reçu')+'</button>';
     if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
     b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
   });
+  if(!b)b='<div class="empty">Aucune réservation à venir.</div>';
   document.getElementById('abk').innerHTML=b;
   renderSlotsAdmin();
   renderCalAdmin();
@@ -1075,7 +1082,8 @@ function renderCalAdmin(){
     if(!empty){
       dayBks.forEach(function(bk){
         var time=(bk.slot||'').split(' à ')[1]||'';
-        h+='<div class="cal-bk"><span class="cal-time">'+time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+'</div>';
+        var _calReq=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
+        h+='<div class="cal-bk"><span class="cal-time">'+time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(_calReq&&_calReq.count&&_calReq.count!=='?'?'<span class="cal-who">🔢 '+_calReq.count+' locks</span>':'')+'</div>';
       });
     } else {
       h+='<span class="cal-none">—</span>';
@@ -1170,7 +1178,7 @@ function sendQuote(id){
 }
 function deleteDevis(id){
   if(!confirm('Supprimer ce devis ?'))return;
-  S.reqs=S.reqs.filter(function(x){return x.id!==id});
+  S.reqs=S.reqs.filter(function(x){return String(x.id)!==String(id)});
   refreshAdmin();
   fetch('/api/admin-devis?id='+encodeURIComponent(id),{method:'DELETE'}).catch(function(){});
 }
@@ -1225,7 +1233,6 @@ function saveReqs(){
   }
 }
 try{var _r=localStorage.getItem('hl_reqs');if(_r){var _p=JSON.parse(_r);if(_p&&_p.length)S.reqs=_p;}}catch(e){}
-try{var _b=localStorage.getItem('hl_bookings');if(_b){var _bp=JSON.parse(_b);if(_bp&&_bp.length)S.bookings=_bp;}}catch(e){}
 try{var _sl=localStorage.getItem('hl_slots');if(_sl){var _sp=JSON.parse(_sl);if(_sp&&typeof _sp==='object')Object.assign(S.slots,_sp);}}catch(e){}
 refreshAdmin();
 </script>
