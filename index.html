@@ -1027,7 +1027,7 @@ function refreshAdmin(){
   var p=S.reqs.filter(function(r){return r.status==='pending'}).length;
   document.getElementById('st-p').textContent=p;document.getElementById('st-r').textContent=S.rdv;document.getElementById('st-c').textContent=S.ac+'€';
   var h='';
-  S.reqs.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
+  S.reqs.slice().sort(function(a,b){var ap=a.status==='pending'?0:1,bp=b.status==='pending'?0:1;if(ap!==bp)return ap-bp;return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
     h+='<div class="req '+r.status+'"><div class="rqh"><span class="rqn">@'+r.name+'</span><span class="rqs '+r.status+'">'+(r.status==='pending'?'À traiter':'Devis envoyé')+'</span></div>';
     h+='<div class="rqd">🔢 '+r.count+' locks</div>';
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
