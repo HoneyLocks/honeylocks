@@ -313,6 +313,13 @@ textarea{resize:vertical;min-height:66px}
 .galerie-track{display:flex;gap:10px;width:max-content;animation:scroll-galerie 20s linear infinite;padding:0 18px}
 .galerie-track img{width:150px;height:150px;object-fit:cover;border-radius:14px;flex-shrink:0;display:block}
 @keyframes scroll-galerie{0%{transform:translateX(0)}100%{transform:translateX(calc(-50% - 5px))}}
+.pay-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.pay-modal-overlay.open{display:flex}
+.pay-modal{background:#1a1a1a;border-radius:18px;padding:24px 20px;max-width:420px;width:100%;border:1px solid #333}
+.pay-modal h4{color:var(--honey);margin:0 0 14px;font-size:16px}
+.pay-modal ul{margin:0 0 20px;padding-left:18px;color:#ccc;font-size:13px;line-height:1.85}
+.pay-modal ul li{margin-bottom:2px}
+.pay-modal .brow{display:flex;gap:10px;justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -528,6 +535,7 @@ textarea{resize:vertical;min-height:66px}
     <div id="brushing-block" style="display:none">
       <label>Supplément</label>
       <div class="opt-row" data-opt="brushing" data-price="20" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+20€</div></div><div class="opt-check">✓</div></div>
+      <p style="margin:4px 0 8px;font-size:11.5px;color:var(--dim);font-style:italic;padding:0 4px">⚠️ Si tes cheveux ne sont pas étirés le jour du rendez-vous, le supplément brushing sera facturé dans tous les cas.</p>
       <div id="long-wrap" style="display:none">
         <div class="opt-row" data-opt="long" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
       </div>
@@ -627,7 +635,23 @@ textarea{resize:vertical;min-height:66px}
     <div class="recap" id="recap"></div>
     <div class="note"><strong>Acompte obligatoire.</strong> Le créneau n'est confirmé qu'une fois l'acompte reçu. Il est déduit du prix total le jour J. 🤍</div>
     <div class="pp-box">Tu seras redirigée vers PayPal pour régler ton acompte de <strong id="pp-amount"></strong>. Merci d'indiquer ton nom Instagram, la date et l'heure de ton RDV en description (sélectionner "Entre proches").</div>
-    <div class="brow"><button class="btn ghost" onclick="goSub('vslot',3)">Retour</button><button class="btn pp" onclick="pay()">Payer l'acompte · PayPal 🤍</button></div>
+    <div class="brow"><button class="btn ghost" onclick="goSub('vslot',3)">Retour</button><button class="btn pp" onclick="openPayModal()">Payer l'acompte · PayPal 🤍</button></div>
+  </div>
+
+  <!-- Modal confirmation paiement -->
+  <div class="pay-modal-overlay" id="payModal">
+    <div class="pay-modal">
+      <h4>✅ En confirmant ta réservation, tu reconnais avoir lu et accepté les règles suivantes :</h4>
+      <ul>
+        <li>Cheveux propres, démêlés et sans produit (cire, huile, crème) obligatoires</li>
+        <li>Cheveux non étirés à l'arrivée : facturation de 20€ supplémentaires ou annulation du rendez-vous si le temps ne le permet pas</li>
+        <li>Retard de plus de 20 min : +10€</li>
+        <li>Retard de plus de 30 min : rendez-vous annulé, acompte non remboursé</li>
+        <li>Cheveux sales ou non démêlés à l'arrivée : prestation annulée, acompte non remboursé</li>
+        <li>L'acompte est non remboursable en cas d'annulation de ta part</li>
+      </ul>
+      <div class="brow"><button class="btn ghost" onclick="closePayModal()">Retour</button><button class="btn pp" onclick="closePayModal();pay()">J'ai compris, je paye ✓</button></div>
+    </div>
   </div>
 
   <!-- done -->
@@ -985,6 +1009,8 @@ function _buildRecap(){
   document.getElementById('pp-amount').textContent=S.acompte+'€';
   goSub('vrecap',4);
 }
+function openPayModal(){document.getElementById('payModal').classList.add('open');}
+function closePayModal(){document.getElementById('payModal').classList.remove('open');}
 function pay(){
   var ppName=S.clientInsta||S.quotedName||'Cliente';
   var ppNote=encodeURIComponent('Acompte @'+ppName+' – '+(S.slot||'RDV'));
