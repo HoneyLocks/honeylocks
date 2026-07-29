@@ -77,7 +77,7 @@ const CONSIGNES = `
     <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">
       <li>Cheveux propres et démêlés obligatoires le jour J</li>
       <li>Venir avec les cheveux secs sans produits (sans cire, huile ni crème)</li>
-      <li>Si les cheveux ne sont pas étirés un supplément de 20€ sera facturé</li>
+      <li>Si les cheveux ne sont pas étirés un supplément de 15€ sera facturé</li>
       <li>Retard de plus de 20 min : supplément de 10€ facturé</li>
       <li>Retard de plus de 30 min : rendez-vous annulé, acompte non remboursé</li>
       <li>Cheveux sales ou non démêlés : prestation annulée, acompte non remboursé</li>
@@ -214,7 +214,7 @@ module.exports = async (req, res) => {
             <ul style="margin:0;padding-left:18px;color:#555;font-size:12.5px;line-height:1.9">
               <li>Cheveux propres et démêlés obligatoires le jour J</li>
               <li>Venir avec les cheveux secs sans produits (sans cire, huile ni crème)</li>
-              <li>Si les cheveux ne sont pas étirés un supplément de 20€ sera facturé</li>
+              <li>Si les cheveux ne sont pas étirés un supplément de 15€ sera facturé</li>
               <li>Retard de plus de 20 min : supplément de 10€ facturé</li>
               <li>Retard de plus de 30 min : rendez-vous annulé, acompte non remboursé</li>
               <li>Cheveux sales ou non démêlés : prestation annulée, acompte non remboursé</li>

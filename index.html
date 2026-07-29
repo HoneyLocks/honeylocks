@@ -46,10 +46,10 @@
     "name": "Prestations",
     "itemListElement": [
       {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Tresses africaines"}, "price": "20", "priceCurrency": "EUR"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Vanilles / Nattes"}, "price": "20", "priceCurrency": "EUR"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Départ de locks"}, "price": "20", "priceCurrency": "EUR"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Vanilles / Nattes"}, "price": "40", "priceCurrency": "EUR"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Départ de locks"}, "price": "45", "priceCurrency": "EUR"},
       {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Retwist + Coiffure"}, "price": "35", "priceCurrency": "EUR"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Barrel twist / Flat twist"}, "price": "20", "priceCurrency": "EUR"}
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Barrel twist / Flat twist"}, "price": "35", "priceCurrency": "EUR"}
     ]
   }
 }
@@ -398,7 +398,7 @@ textarea{resize:vertical;min-height:66px}
   <p class="body">Réserver chez Honey Locks est simple. Pour les tresses et vanilles, tu réserves directement. Pour une reprise ou un démêlage de locks, tu fais une demande de devis (chaque chevelure est différente).</p>
   <div class="proc"><div class="num">01</div><h3>Choisis ta prestation</h3><p>Tresses, vanilles, départ de locks : réservation directe. Reprise ou démêlage : envoie une photo et ton nombre de locks pour ton devis perso.</p></div>
   <div class="proc"><div class="num">02</div><h3>Choisis ton créneau</h3><p>Sélectionne un créneau disponible. Le créneau n'est réservé qu'une fois l'acompte versé.</p></div>
-  <div class="proc"><div class="num">03</div><h3>Verse ton acompte</h3><p>Acompte via PayPal (10€ pour les coiffures découverte, 20€ pour les reprises). Il est déduit du prix total le jour du rendez-vous.</p></div>
+  <div class="proc"><div class="num">03</div><h3>Verse ton acompte</h3><p>Acompte via PayPal (15€ pour la plupart des coiffures, 20€ pour les départs de locks et retwist). Il est déduit du prix total le jour du rendez-vous.</p></div>
   <button class="btn" onclick="go('reserve')">Réserver maintenant</button>
 </div>
 
@@ -409,7 +409,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="rule"><strong>Acompte obligatoire</strong><span>Aucun créneau n'est bloqué sans acompte. L'acompte est déduit du prix total le jour J.</span></div>
   <div class="rule"><strong>Cheveux propres et démêlés obligatoires</strong><span>Se présenter avec les cheveux propres, étirés et démêlés. Dans le cas contraire, la prestation peut être annulée et l'acompte non remboursé.</span></div>
   <div class="rule"><strong>Cheveux secs sans produits</strong><span>Venir avec les cheveux secs sans produits (sans cire, huile ni crème).</span></div>
-  <div class="rule"><strong>Brushing non pris ? Supplément possible</strong><span>Si le brushing n'a pas été réservé et que les cheveux ne sont pas étirés, un supplément de +20€ sera facturé.</span></div>
+  <div class="rule"><strong>Brushing non pris ? Supplément possible</strong><span>Si le brushing n'a pas été réservé et que les cheveux ne sont pas étirés, un supplément de +15€ sera facturé.</span></div>
   <div class="rule"><strong>Retard de plus de 20 min</strong><span>Supplément de 10€ facturé. Préviens-moi dès que possible si tu es en retard.</span></div>
   <div class="rule"><strong>Retard de plus de 30 min</strong><span>Rendez-vous annulé, acompte non remboursé.</span></div>
   <div class="rule"><strong>Paiement du solde en espèces</strong><span>Prévoir la monnaie le jour du rendez-vous.</span></div>
@@ -433,30 +433,30 @@ textarea{resize:vertical;min-height:66px}
       <div class="svc-info"><span class="pill devis">Sur devis</span><div class="svc-name">Démêlage de locks</div><div class="svc-desc">Prestation longue · sur devis</div></div><div class="svc-price" style="white-space:normal;text-align:right">Sur devis<br>à partir de 200€</div></div>
 
     <div class="cat-title">Départ de locks</div>
-    <div class="svc" data-id="depart-twist" data-name="Départ de locks en twist" data-type="size" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Départ de locks en twist</div><div class="svc-desc">Taille à l'étape suivante<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 20€</div></div>
-    <div class="svc" data-id="depart-vanille" data-name="Départ de locks en vanilles" data-type="size" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Départ de locks en vanilles</div><div class="svc-desc">Taille à l'étape suivante<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 20€</div></div>
+    <div class="svc" data-id="depart-twist" data-name="Départ de locks en twist" data-type="size" data-base="45" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Départ de locks en twist</div><div class="svc-desc">Taille à l'étape suivante<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
+    <div class="svc" data-id="depart-vanille" data-name="Départ de locks en vanilles" data-type="size" data-base="45" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Départ de locks en vanilles</div><div class="svc-desc">Taille à l'étape suivante<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
 
     <div class="cat-title">Tresses</div>
     <div class="svc" data-id="tresses-n1" data-name="Tresses N1 · Classic" data-type="tresses-low" data-base="20" data-inspo="" onclick="pick(this)">
       <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 1 · Classic</div><div class="svc-desc">À partir de 4 tresses · tresses droites sans motif<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="tresses-n2" data-name="Tresses N2 · Flow" data-type="tresses-low" data-base="20" data-inspo="1" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 2 · Flow</div><div class="svc-desc">Vagues, zigzag, courbes, un seul cœur + tresses droites<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="tresses-n3" data-name="Tresses N3 · Details" data-type="tresses-high" data-base="20" data-inspo="1" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 3 · Details</div><div class="svc-desc">Croisements, croix, éclairs, petites tresses décoratives<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
+    <div class="svc" data-id="tresses-n2" data-name="Tresses N2 · Flow" data-type="tresses-low" data-base="25" data-inspo="1" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 2 · Flow</div><div class="svc-desc">Vagues, zigzag, courbes, un seul cœur + tresses droites<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">25€</div></div>
+    <div class="svc" data-id="tresses-n3" data-name="Tresses N3 · Details" data-type="tresses-high" data-base="30" data-inspo="1" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 3 · Details</div><div class="svc-desc">Croisements, croix, éclairs, petites tresses décoratives<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">30€</div></div>
     <div class="svc disabled" data-id="tresses-n4" data-name="Tresses N4 · Signature" data-type="tresses-high" data-base="20" data-inspo="1">
       <div class="svc-info"><span class="pill soon">Bientôt</span><div class="svc-name">Niveau 4 · Signature</div><div class="svc-desc">Fleurs, papillon, spirales, différents motifs combinés, designs rares</div></div><div class="svc-price">Bientôt disponible 🔜</div></div>
 
     <div class="cat-title">Vanilles &amp; Twists</div>
-    <div class="svc" data-id="vanilles-nattes" data-name="Vanilles / Nattes" data-type="vanille-taille" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles / Nattes</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="vanilles-fl" data-name="Vanilles fausses locks" data-type="vanille-taille" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles fausses locks</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="barrel-flat" data-name="Barrel twist / Flat twist" data-type="barrel" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Barrel twist / Flat twist</div><div class="svc-desc">Option nombre + brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="fulani" data-name="Fulani" data-type="fulani" data-base="20" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Fulani</div><div class="svc-desc">Devant + derrière personnalisés<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
+    <div class="svc" data-id="vanilles-nattes" data-name="Vanilles / Nattes" data-type="vanille-taille" data-base="40" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles / Nattes</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 40€</div></div>
+    <div class="svc" data-id="vanilles-fl" data-name="Vanilles fausses locks" data-type="vanille-taille" data-base="40" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles fausses locks</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 40€</div></div>
+    <div class="svc" data-id="barrel-flat" data-name="Barrel twist / Flat twist" data-type="barrel" data-base="35" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Barrel twist / Flat twist</div><div class="svc-desc">Option nombre + brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 35€</div></div>
+    <div class="svc" data-id="fulani" data-name="Fulani" data-type="fulani" data-base="45" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Fulani</div><div class="svc-desc">Devant + derrière personnalisés<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
 
     <div class="cat-title">Soins · Couleur</div>
     <div class="svc disabled"><div class="svc-info"><span class="pill soon">Bientôt</span><div class="svc-name">Shampooing</div><div class="svc-desc">Bientôt disponible</div></div></div>
@@ -469,6 +469,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="sv" id="vopt">
     <button class="sv-back" onclick="back1()">←</button>
     <h2 id="opt-title">Options</h2><p class="sub">Personnalise ta prestation</p>
+    <p id="vopt-hint" style="display:none;font-size:12.5px;color:var(--honey);margin:-10px 0 12px"></p>
     <!-- Taille des locks (départ de locks) -->
     <div id="size-block" style="display:none">
       <label>Taille des locks</label>
@@ -487,25 +488,28 @@ textarea{resize:vertical;min-height:66px}
       <label>Taille</label>
       <div class="chips">
         <div class="chip chip-vtaille" data-vtaille="Médium" data-price="0" onclick="pickVTaille(this)">Médium</div>
-        <div class="chip chip-vtaille" data-vtaille="Large" data-price="0" onclick="pickVTaille(this)">Large <span style="font-size:10px;opacity:.65">−5€</span></div>
+        <div class="chip chip-vtaille" data-vtaille="Large" data-price="-5" onclick="pickVTaille(this)">Large <span style="font-size:10px;opacity:.65">−5€</span></div>
       </div>
     </div>
     <!-- Nombre de tresses N1+N2 -->
     <div id="n12-block" style="display:none">
       <label>Nombre de tresses</label>
-      <div class="opt-row" data-opt="n-6a8" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">6 à 8 tresses</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
-      <div class="opt-row" data-opt="n-8plus" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Plus de 8 tresses</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="n-6a7" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">6 à 7 tresses</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="n-8a9" data-price="10" onclick="toggleOpt(this)"><div><div class="opt-name">8 à 9 tresses</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="n-10plus" data-price="15" onclick="toggleOpt(this)"><div><div class="opt-name">+10 tresses</div><div class="opt-price">+15€</div></div><div class="opt-check">✓</div></div>
     </div>
     <!-- Nombre de tresses N3+N4 -->
     <div id="n34-block" style="display:none">
       <label>Nombre de tresses</label>
-      <div class="opt-row" data-opt="n-10plus" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Plus de 10 tresses</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="n-6a7" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">6 à 7 tresses</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="n-8a9" data-price="10" onclick="toggleOpt(this)"><div><div class="opt-name">8 à 9 tresses</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="n-10plus" data-price="15" onclick="toggleOpt(this)"><div><div class="opt-name">+10 tresses</div><div class="opt-price">+15€</div></div><div class="opt-check">✓</div></div>
     </div>
     <!-- Nombre de barrels (Barrel twist / Flat twist) -->
     <div id="barrel-block" style="display:none">
       <label>Nombre</label>
-      <div class="opt-row" data-opt="b-6a8" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">6 à 8 barrels</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
-      <div class="opt-row" data-opt="b-8plus" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Plus de 8 barrels</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="b-6a8" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">6 à 8 barrels</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="b-8plus" data-price="10" onclick="toggleOpt(this)"><div><div class="opt-name">Plus de 8 barrels</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
     </div>
     <!-- Photo inspiration (tresses N2-N4) -->
     <div id="inspo-block" style="display:none">
@@ -524,17 +528,16 @@ textarea{resize:vertical;min-height:66px}
       <div class="chips">
         <div class="chip chip-fb" data-fb="Vanilles" onclick="pickFB(this)">Vanilles</div>
         <div class="chip chip-fb" data-fb="Nattes" onclick="pickFB(this)">Nattes</div>
-        <div class="chip chip-fb" data-fb="Vanilles fausses locks" onclick="pickFB(this)">Fausses locks <span style="font-size:10px;opacity:.65">+0€</span></div>
+        <div class="chip chip-fb" data-fb="Vanilles fausses locks" data-price="5" onclick="pickFB(this)">Fausses locks <span style="font-size:10px;opacity:.65">+5€</span></div>
       </div>
       <label>Options</label>
       <div class="opt-row" data-opt="fulani-design" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Design devant</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
-      <div class="opt-row" data-opt="fulani-6a8" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">6 à 8 tresses</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
-      <div class="opt-row" data-opt="fulani-8plus" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Plus de 8 tresses</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="fulani-8plus" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">Plus de 8 devant</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
     </div>
     <!-- Supplément brushing + longueur (masqués pour Fulani) -->
     <div id="brushing-block" style="display:none">
       <label>Supplément</label>
-      <div class="opt-row" data-opt="brushing" data-price="20" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+20€</div></div><div class="opt-check">✓</div></div>
+      <div class="opt-row" data-opt="brushing" data-price="15" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+15€</div></div><div class="opt-check">✓</div></div>
       <p style="margin:4px 0 8px;font-size:11.5px;color:var(--dim);font-style:italic;padding:0 4px">⚠️ Si tes cheveux ne sont pas étirés le jour du rendez-vous, le supplément brushing sera facturé dans tous les cas.</p>
       <div id="long-wrap" style="display:none">
         <div class="opt-row" data-opt="long" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
@@ -644,7 +647,7 @@ textarea{resize:vertical;min-height:66px}
       <h4>✅ En confirmant ta réservation, tu reconnais avoir lu et accepté les règles suivantes :</h4>
       <ul>
         <li>Cheveux propres, démêlés, étirés et sans produit (cire, huile, crème) obligatoires</li>
-        <li>Cheveux non étirés à l'arrivée : facturation de 20€ supplémentaires ou annulation du rendez-vous si le temps ne le permet pas</li>
+        <li>Cheveux non étirés à l'arrivée : facturation de 15€ supplémentaires ou annulation du rendez-vous si le temps ne le permet pas</li>
         <li>Retard de plus de 20 min : +10€</li>
         <li>Retard de plus de 30 min : rendez-vous annulé, acompte non remboursé</li>
         <li>Cheveux sales ou non démêlés à l'arrivée : prestation annulée, acompte non remboursé</li>
@@ -684,9 +687,9 @@ textarea{resize:vertical;min-height:66px}
 </div>
 
 <script>
-var ACOMPTE_PROMO=10,ACOMPTE_DEVIS=20;
+var ACOMPTE_PROMO=15,ACOMPTE_DEVIS=20;
 var PAYPAL='https://www.paypal.me/loveloveleM'; /* lien PayPal.me de Maïna */
-var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,acompte:10,slot:null,slotIso:null,clientInsta:null,clientEmail:null,
+var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,acompte:15,slot:null,slotIso:null,clientInsta:null,clientEmail:null,
   inspo:false,fulaniFront:null,fulaniBack:null,sansCoif:false,
   curPhotos:[],inspoPhotos:[],
   reqs:[],
@@ -706,7 +709,7 @@ function back1(){goSub('v1',1)}
 function from1(){
   S.size=null;S.opts=[];S.optTotal=0;S.fulaniFront=null;S.fulaniBack=null;S.inspoPhotos=[];
   if(S.type==='devis'){S.acompte=ACOMPTE_DEVIS;document.querySelector('#vcheck h2').textContent=S.name;goSub('vcheck',2);return}
-  S.acompte=ACOMPTE_PROMO;
+  S.acompte=(S.type==='size')?20:ACOMPTE_PROMO;
   var isSize=S.type==='size',isVT=S.type==='vanille-taille',isFul=S.type==='fulani';
   var isTLow=S.type==='tresses-low',isTHigh=S.type==='tresses-high',isBarrel=S.type==='barrel';
   var showInspo=isTHigh||(isTLow&&S.inspo);
@@ -723,6 +726,11 @@ function from1(){
   document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('selected')});
   document.querySelectorAll('#vopt .opt-row').forEach(function(o){o.classList.remove('selected')});
   document.getElementById('opt-title').textContent=S.name;
+  var _hint=document.getElementById('vopt-hint');
+  _hint.style.display='none';
+  if(isTLow||isTHigh){_hint.textContent='💡 Le prix de base inclut 4 à 5 tresses.';_hint.style.display='block';}
+  else if(isBarrel){_hint.textContent='💡 Le prix de base inclut 4 à 5 barrels.';_hint.style.display='block';}
+  else if(isFul){_hint.textContent='💡 Le prix de base inclut 4 à 5 tresses/barrels/flat twists devant.';_hint.style.display='block';}
   document.getElementById('bopt').disabled=(isSize||isFul);
   if(isVT){var m=document.querySelector('.chip-vtaille[data-vtaille="Médium"]');if(m)pickVTaille(m);}
   if(showInspo){buildPhotoGrid('vopt-inspo',1);}
@@ -758,6 +766,10 @@ function pickFF(el){
 function pickFB(el){
   document.querySelectorAll('.chip-fb').forEach(function(c){c.classList.remove('selected')});
   el.classList.add('selected');S.fulaniBack=el.dataset.fb;
+  S.opts=S.opts.filter(function(o){return o.key!=='fulaniBack';});
+  var fbp=parseInt(el.dataset.price)||0;
+  if(fbp!==0)S.opts.push({key:'fulaniBack',name:'Fausses locks derrière',price:fbp});
+  S.optTotal=S.opts.reduce(function(sum,o){return sum+o.price;},0);
   document.getElementById('bopt').disabled=!(S.fulaniFront&&S.fulaniBack);
 }
 function fromOpt(){
@@ -1052,7 +1064,7 @@ function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
-function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){S.reqs=[];rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var notePhotos=Array.isArray(noteObj.photos)?noteObj.photos:[];var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:notePhotos});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){S.bookings=[];rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl'))?20:10;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});}
+function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){S.reqs=[];rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var notePhotos=Array.isArray(noteObj.photos)?noteObj.photos:[];var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:notePhotos});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){S.bookings=[];rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});}
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
 function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
 function refreshAdmin(){
