@@ -46,7 +46,8 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, prenom, email, service, prix, message, photos } = req.body
+  const { nom, prenom, email: emailRaw, service, prix, message, photos } = req.body
+  const email = emailRaw ? emailRaw.toLowerCase().trim() : emailRaw
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
   const isQuote = prixStr && prixStr.toLowerCase() !== 'sur devis' && !isNaN(parseFloat(prixStr))
 

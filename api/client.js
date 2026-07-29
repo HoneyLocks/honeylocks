@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
 
   try {
     const response = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=eq.${encodeURIComponent(email)}&select=*&order=created_at.desc&limit=1`,
+      `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=ilike.${encodeURIComponent(email.toLowerCase())}&select=*&order=created_at.desc&limit=1`,
       {
         headers: {
           'apikey': process.env.SUPABASE_KEY,
