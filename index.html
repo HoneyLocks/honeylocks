@@ -872,7 +872,7 @@ function loginExisting(){
         S.quotedName=data.name||em.split('@')[0];
         S.name=data.service||null;
         var _bp=data.price;
-        res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé '+(data.service?data.service+' ':'')+':<strong style="color:var(--honey-light)"> '+_bp+'€</strong>.</div>'
+        res.innerHTML='<div class="note" style="margin-top:0"><strong>Bonjour '+S.quotedName+' 🍯</strong><br>Ton devis validé Retwist + Coiffure protectrice au choix : <strong style="color:var(--honey-light)">'+_bp+'€</strong>.</div>'
           +'<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:14px 0 4px">'
           +'<input type="checkbox" id="e-meches" style="margin-top:3px;accent-color:var(--honey);width:16px;height:16px;flex-shrink:0">'
           +'<span style="font-size:14px;color:var(--dim)">Vanilles + mèches bouclées <span style="color:var(--honey)">(+20€, mèches non comprises)</span></span>'
