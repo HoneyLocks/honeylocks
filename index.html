@@ -540,7 +540,7 @@ textarea{resize:vertical;min-height:66px}
       <div class="opt-row" data-opt="brushing" data-price="15" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+15€</div></div><div class="opt-check">✓</div></div>
       <p style="margin:4px 0 8px;font-size:11.5px;color:var(--dim);font-style:italic;padding:0 4px">⚠️ Si tes cheveux ne sont pas étirés le jour du rendez-vous, le supplément brushing sera facturé dans tous les cas.</p>
       <div id="long-wrap" style="display:none">
-        <div class="opt-row" data-opt="long" data-price="0" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+0€</div></div><div class="opt-check">✓</div></div>
+        <div class="opt-row" data-opt="long" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
       </div>
     </div>
     <div class="brow"><button class="btn ghost" onclick="back1()">Retour</button><button class="btn" id="bopt" onclick="fromOpt()">Continuer</button></div>
@@ -608,6 +608,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="sv" id="vslot">
     <button class="sv-back" onclick="backFromSlot()">←</button>
     <h2>Choisis ton créneau</h2><p class="sub" id="slot-sub"></p>
+    <p style="font-size:13px;color:var(--honey);background:rgba(201,168,76,.08);border-left:3px solid var(--honey);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:16px">⏳ Prévois du temps ! Chaque prestation est réalisée avec soin et sans précipitation.</p>
     <div id="slots"></div>
     <div class="dm-modal" id="dm-modal" onclick="if(event.target===this)closeDmModal()">
       <div class="dm-modal-bg" onclick="closeDmModal()"></div>
@@ -811,12 +812,12 @@ function addPhoto(id,max){
     fr.onload=function(e){
       var img=new Image();
       img.onload=function(){
-        var MAX=900;
+        var MAX=800;
         var w=img.width,h=img.height;
         if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
         var cv=document.createElement('canvas');cv.width=w;cv.height=h;
         cv.getContext('2d').drawImage(img,0,0,w,h);
-        arr.push(cv.toDataURL('image/jpeg',0.82));
+        arr.push(cv.toDataURL('image/jpeg',0.70));
         var c=document.getElementById(id);if(c._render)c._render();checkDevis();
       };
       img.src=e.target.result;
