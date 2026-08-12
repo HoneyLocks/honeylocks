@@ -184,6 +184,8 @@ p.body{font-size:14px;color:rgba(245,233,200,.8);margin-bottom:14px;line-height:
 .pill.promo{background:rgba(201,168,76,.16);color:var(--honey-light)}
 .pill.devis{background:rgba(196,106,90,.18);color:var(--danger)}
 .pill.soon{background:rgba(138,122,82,.2);color:var(--soon)}
+.pill.unavailable{background:rgba(196,106,90,.18);color:var(--danger)}
+.svc-unavailable-note{font-size:11.5px;color:var(--dim);background:rgba(196,106,90,.08);border-left:3px solid var(--danger);border-radius:0 8px 8px 0;padding:10px 12px;margin:2px 0 14px;line-height:1.6}
 
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .chip{flex:1;min-width:70px;text-align:center;background:#1f1610;border:1px solid var(--border);border-radius:10px;padding:11px 6px;font-size:13px;cursor:pointer;transition:.15s}
@@ -306,6 +308,14 @@ textarea{resize:vertical;min-height:66px}
 .cal-svc{color:var(--text);font-size:12px}
 .cal-who{color:var(--dim);font-size:11px}
 .cal-none{font-size:11px;color:rgba(245,233,200,.15);line-height:1;padding-top:3px}
+.btn-perso-add{width:100%;background:transparent;border:1px dashed var(--border);color:var(--honey);border-radius:12px;padding:12px;font-family:inherit;font-size:12.5px;letter-spacing:.5px;cursor:pointer;margin-bottom:14px}
+.perso-form{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:18px}
+.perso-form label{margin:12px 0 6px}
+.perso-form label:first-child{margin-top:0}
+.perso-form input[type=color]{padding:4px;height:44px;cursor:pointer}
+.cal-bk.perso{background:var(--_pc-bg,rgba(255,255,255,.06));border-color:var(--_pc-border,rgba(255,255,255,.18))}
+.cal-perso-dot{width:8px;height:8px;border-radius:50%;background:var(--_pc-dot,#fff);flex-shrink:0}
+.cal-perso-del{color:var(--dim);cursor:pointer;font-size:13px;margin-left:auto;padding:0 2px}
 .sv-back{background:none;border:none;color:var(--honey);font-size:22px;cursor:pointer;padding:0 0 10px;opacity:.5;display:block;line-height:1;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .sv-back:active{opacity:1}
 .galerie-wrap{padding:22px 0 4px;overflow:hidden}
@@ -359,6 +369,7 @@ textarea{resize:vertical;min-height:66px}
     <div class="hero-sub">Plus qu'une coiffure, une signature.</div>
     <div class="hero-sub" style="margin-top:4px;letter-spacing:1.5px">Réserve ton expérience dès aujourd'hui · Disponible 7j/7</div>
     <div style="margin-top:14px;display:inline-block;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.22);border-radius:99px;padding:7px 16px;font-size:.72rem;color:var(--dim);letter-spacing:.8px">🏠 Studio privé · Sans vis-à-vis · 100% dédié à la coiffure</div>
+    <div style="margin-top:10px;display:inline-block;background:rgba(196,106,90,.1);border:1px solid rgba(196,106,90,.28);border-radius:99px;padding:7px 16px;font-size:.72rem;color:var(--danger);letter-spacing:.5px">⚠️ Je ne coiffe pas les enfants de moins de 13 ans.</div>
   </div>
   <div class="home-cards">
     <div class="home-card" onclick="go('reserve')"><div class="ic">📅</div><div><div class="ct">Réserver</div><div class="cd">Choisis ta coiffure et ton créneau</div></div></div>
@@ -414,6 +425,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="rule"><strong>Retard de plus de 30 min</strong><span>Rendez-vous annulé, acompte non remboursé.</span></div>
   <div class="rule"><strong>Paiement du solde en espèces</strong><span>Prévoir la monnaie le jour du rendez-vous.</span></div>
   <div class="rule"><strong>RDV hors planning possibles</strong><span>Tarifs majorés, à demander via Instagram.</span></div>
+  <div class="rule"><strong>⚠️ Âge minimum</strong><span>Je ne coiffe pas les enfants de moins de 13 ans.</span></div>
   <button class="btn" onclick="go('reserve')">J'ai compris, réserver</button>
 </div>
 
@@ -439,24 +451,26 @@ textarea{resize:vertical;min-height:66px}
       <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Départ de locks en vanilles</div><div class="svc-desc">Taille à l'étape suivante<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
 
     <div class="cat-title">Tresses</div>
-    <div class="svc" data-id="tresses-n1" data-name="Tresses N1 · Classic" data-type="tresses-low" data-base="20" data-inspo="" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 1 · Classic</div><div class="svc-desc">À partir de 4 tresses · tresses droites sans motif<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">20€</div></div>
-    <div class="svc" data-id="tresses-n2" data-name="Tresses N2 · Flow" data-type="tresses-low" data-base="25" data-inspo="1" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 2 · Flow</div><div class="svc-desc">Vagues, zigzag, courbes, un seul cœur + tresses droites<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">25€</div></div>
-    <div class="svc" data-id="tresses-n3" data-name="Tresses N3 · Details" data-type="tresses-high" data-base="30" data-inspo="1" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Niveau 3 · Details</div><div class="svc-desc">Croisements, croix, éclairs, petites tresses décoratives<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">30€</div></div>
+    <div class="svc disabled" data-id="tresses-n1" data-name="Tresses N1 · Classic" data-type="tresses-low" data-base="20" data-inspo="">
+      <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Niveau 1 · Classic</div><div class="svc-desc">À partir de 4 tresses · tresses droites sans motif</div></div><div class="svc-price">Indisponible</div></div>
+    <div class="svc disabled" data-id="tresses-n2" data-name="Tresses N2 · Flow" data-type="tresses-low" data-base="25" data-inspo="1">
+      <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Niveau 2 · Flow</div><div class="svc-desc">Vagues, zigzag, courbes, un seul cœur + tresses droites</div></div><div class="svc-price">Indisponible</div></div>
+    <div class="svc disabled" data-id="tresses-n3" data-name="Tresses N3 · Details" data-type="tresses-high" data-base="30" data-inspo="1">
+      <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Niveau 3 · Details</div><div class="svc-desc">Croisements, croix, éclairs, petites tresses décoratives</div></div><div class="svc-price">Indisponible</div></div>
     <div class="svc disabled" data-id="tresses-n4" data-name="Tresses N4 · Signature" data-type="tresses-high" data-base="20" data-inspo="1">
-      <div class="svc-info"><span class="pill soon">Bientôt</span><div class="svc-name">Niveau 4 · Signature</div><div class="svc-desc">Fleurs, papillon, spirales, différents motifs combinés, designs rares</div></div><div class="svc-price">Bientôt disponible 🔜</div></div>
+      <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Niveau 4 · Signature</div><div class="svc-desc">Fleurs, papillon, spirales, différents motifs combinés, designs rares</div></div><div class="svc-price">Indisponible</div></div>
+    <div class="svc-unavailable-note">⚠️ Pour des raisons de santé, ces prestations sont indisponibles pour une durée indéterminée. Merci de votre compréhension 🍯</div>
 
     <div class="cat-title">Vanilles &amp; Twists</div>
     <div class="svc" data-id="vanilles-nattes" data-name="Vanilles / Nattes" data-type="vanille-taille" data-base="40" onclick="pick(this)">
       <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles / Nattes</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 35€</div></div>
     <div class="svc" data-id="vanilles-fl" data-name="Vanilles fausses locks" data-type="vanille-taille" data-base="40" onclick="pick(this)">
       <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles fausses locks</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 35€</div></div>
-    <div class="svc" data-id="barrel-flat" data-name="Barrel twist / Flat twist" data-type="barrel" data-base="35" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Barrel twist / Flat twist</div><div class="svc-desc">Option nombre + brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 35€</div></div>
-    <div class="svc" data-id="fulani" data-name="Fulani" data-type="fulani" data-base="45" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Fulani</div><div class="svc-desc">Devant + derrière personnalisés<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
+    <div class="svc disabled" data-id="barrel-flat" data-name="Barrel twist / Flat twist" data-type="barrel" data-base="35">
+      <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Barrel twist / Flat twist</div><div class="svc-desc">Option nombre + brushing</div></div><div class="svc-price">Indisponible</div></div>
+    <div class="svc disabled" data-id="fulani" data-name="Fulani" data-type="fulani" data-base="45">
+      <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Fulani</div><div class="svc-desc">Devant + derrière personnalisés</div></div><div class="svc-price">Indisponible</div></div>
+    <div class="svc-unavailable-note">⚠️ Pour des raisons de santé, ces prestations sont indisponibles pour une durée indéterminée. Merci de votre compréhension 🍯</div>
 
     <div class="cat-title">Soins · Couleur</div>
     <div class="svc disabled"><div class="svc-info"><span class="pill soon">Bientôt</span><div class="svc-name">Shampooing</div><div class="svc-desc">Bientôt disponible</div></div></div>
@@ -539,8 +553,17 @@ textarea{resize:vertical;min-height:66px}
       <label>Supplément</label>
       <div class="opt-row" data-opt="brushing" data-price="15" onclick="toggleOpt(this)"><div><div class="opt-name">Brushing</div><div class="opt-price">+15€</div></div><div class="opt-check">✓</div></div>
       <p style="margin:4px 0 8px;font-size:11.5px;color:var(--dim);font-style:italic;padding:0 4px">⚠️ Si tes cheveux ne sont pas étirés le jour du rendez-vous, le supplément brushing sera facturé dans tous les cas.</p>
-      <div id="long-wrap" style="display:none">
-        <div class="opt-row" data-opt="long" data-price="5" onclick="toggleOpt(this)"><div><div class="opt-name">Cheveux moyen / long</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
+      <div id="long-wrap-depart" style="display:none">
+        <label>Longueur des cheveux</label>
+        <div class="opt-row" data-long="long" data-price="10" onclick="pickLong(this)"><div><div class="opt-name">Cheveux moyen/long</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
+        <div class="opt-row" data-long="xlong" data-price="30" onclick="pickLong(this)"><div><div class="opt-name">Cheveux extra long</div><div class="opt-price">+30€</div></div><div class="opt-check">✓</div></div>
+        <p style="margin:4px 0 8px;font-size:11px;color:var(--dim);line-height:1.5;padding:0 4px">Moyen/long = de la mâchoire aux épaules · Extra long = en dessous des épaules</p>
+      </div>
+      <div id="long-wrap-vanille" style="display:none">
+        <label>Longueur des cheveux</label>
+        <div class="opt-row" data-long="long" data-price="5" onclick="pickLong(this)"><div><div class="opt-name">Cheveux moyen/long</div><div class="opt-price">+5€</div></div><div class="opt-check">✓</div></div>
+        <div class="opt-row" data-long="xlong" data-price="10" onclick="pickLong(this)"><div><div class="opt-name">Cheveux extra long</div><div class="opt-price">+10€</div></div><div class="opt-check">✓</div></div>
+        <p style="margin:4px 0 8px;font-size:11px;color:var(--dim);line-height:1.5;padding:0 4px">Moyen/long = de la mâchoire aux épaules · Extra long = en dessous des épaules</p>
       </div>
     </div>
     <div class="brow"><button class="btn ghost" onclick="back1()">Retour</button><button class="btn" id="bopt" onclick="fromOpt()">Continuer</button></div>
@@ -683,7 +706,24 @@ textarea{resize:vertical;min-height:66px}
   </div>
   <div class="apanel active" id="ap-quotes"><div id="areq"></div></div>
   <div class="apanel" id="ap-bookings"><div id="abk"></div></div>
-  <div class="apanel" id="ap-cal"></div>
+  <div class="apanel" id="ap-cal">
+    <button class="btn-perso-add" onclick="togglePersoForm()">➕ Ajouter un événement perso</button>
+    <div id="perso-form" class="perso-form" style="display:none">
+      <label>Titre</label>
+      <input type="text" id="pf-titre" placeholder="Ex : Rendez-vous médecin">
+      <label>Date</label>
+      <input type="date" id="pf-date">
+      <label>Heure</label>
+      <input type="time" id="pf-heure">
+      <label>Couleur</label>
+      <input type="color" id="pf-couleur" value="#5BA873">
+      <div class="brow" style="margin-top:14px">
+        <button class="btn ghost" onclick="togglePersoForm()">Annuler</button>
+        <button class="btn" onclick="savePersoEvent()">Enregistrer</button>
+      </div>
+    </div>
+    <div id="cal-list"></div>
+  </div>
   <div class="apanel" id="ap-slots"></div>
 </div>
 
@@ -723,7 +763,8 @@ function from1(){
   document.getElementById('inspo-block').style.display=showInspo?'block':'none';
   document.getElementById('fulani-block').style.display=isFul?'block':'none';
   document.getElementById('brushing-block').style.display=isFul?'none':'block';
-  document.getElementById('long-wrap').style.display=(!isFul&&!isVT)?'block':'none';
+  document.getElementById('long-wrap-depart').style.display=isSize?'block':'none';
+  document.getElementById('long-wrap-vanille').style.display=isVT?'block':'none';
   document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('selected')});
   document.querySelectorAll('#vopt .opt-row').forEach(function(o){o.classList.remove('selected')});
   document.getElementById('opt-title').textContent=S.name;
@@ -749,6 +790,19 @@ function toggleOpt(el){
   var name=el.querySelector('.opt-name').textContent.trim();
   if(el.classList.contains('selected')){S.opts.push({key:key,name:name,price:price});}
   else{S.opts=S.opts.filter(function(o){return o.key!==key});}
+  S.optTotal=S.opts.reduce(function(sum,o){return sum+o.price},0);
+}
+function pickLong(el){
+  var group=el.parentElement;
+  var wasSelected=el.classList.contains('selected');
+  group.querySelectorAll('.opt-row').forEach(function(o){o.classList.remove('selected')});
+  S.opts=S.opts.filter(function(o){return o.key!=='long';});
+  if(!wasSelected){
+    el.classList.add('selected');
+    var price=parseInt(el.dataset.price)||0;
+    var name=el.querySelector('.opt-name').textContent.trim();
+    S.opts.push({key:'long',name:name,price:price});
+  }
   S.optTotal=S.opts.reduce(function(sum,o){return sum+o.price},0);
 }
 function pickVTaille(el){
@@ -1108,12 +1162,38 @@ function refreshAdmin(){
   renderSlotsAdmin();
   renderCalAdmin();
 }
+function escHtml(s){return (s||'').toString().replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function loadPersoEvents(){try{return JSON.parse(localStorage.getItem('hl-perso-events')||'[]');}catch(e){return [];}}
+function savePersoEvents(arr){localStorage.setItem('hl-perso-events',JSON.stringify(arr));}
+function togglePersoForm(){
+  var f=document.getElementById('perso-form');
+  var open=f.style.display==='block';
+  f.style.display=open?'none':'block';
+  if(!open){document.getElementById('pf-titre').value='';document.getElementById('pf-date').value='';document.getElementById('pf-heure').value='';document.getElementById('pf-couleur').value='#5BA873';}
+}
+function savePersoEvent(){
+  var titre=document.getElementById('pf-titre').value.trim();
+  var date=document.getElementById('pf-date').value;
+  var heure=document.getElementById('pf-heure').value;
+  var couleur=document.getElementById('pf-couleur').value;
+  if(!titre||!date){alert('Merci de renseigner au moins un titre et une date.');return;}
+  var arr=loadPersoEvents();
+  arr.push({id:Date.now(),titre:titre,date:date,heure:heure,couleur:couleur});
+  savePersoEvents(arr);
+  togglePersoForm();
+  renderCalAdmin();
+}
+function deletePersoEvent(id){
+  savePersoEvents(loadPersoEvents().filter(function(e){return e.id!==id;}));
+  renderCalAdmin();
+}
 function renderCalAdmin(){
-  var el=document.getElementById('ap-cal');
+  var el=document.getElementById('cal-list');
   if(!el)return;
   var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
   var h='';
+  var persoEvents=loadPersoEvents();
   var today=new Date();today.setHours(0,0,0,0);
   for(var i=0;i<30;i++){
     var d=new Date(today.getTime());d.setDate(today.getDate()+i);
@@ -1121,7 +1201,9 @@ function renderCalAdmin(){
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
     var dayBks=S.bookings.filter(function(bk){return bk.slotIso===iso;});
     dayBks.sort(function(a,b){return (a.slot||'').localeCompare(b.slot||'');});
-    var empty=dayBks.length===0;
+    var dayPerso=persoEvents.filter(function(pe){return pe.date===iso;});
+    dayPerso.sort(function(a,b){return (a.heure||'').localeCompare(b.heure||'');});
+    var empty=dayBks.length===0&&dayPerso.length===0;
     h+='<div class="cal-day">';
     h+='<div class="cal-date'+(empty?' empty':'')+'">'+label+'</div>';
     h+='<div class="cal-bks">';
@@ -1130,6 +1212,10 @@ function renderCalAdmin(){
         var time=(bk.slot||'').split(' à ')[1]||'';
         var _calReq=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
         h+='<div class="cal-bk"><span class="cal-time">'+time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(_calReq&&_calReq.count&&_calReq.count!=='?'?'<span class="cal-who">🔢 '+_calReq.count+' locks</span>':'')+'</div>';
+      });
+      dayPerso.forEach(function(pe){
+        var col=pe.couleur||'#5BA873';
+        h+='<div class="cal-bk perso" style="--_pc-bg:'+col+'22;--_pc-border:'+col+'55;--_pc-dot:'+col+'"><span class="cal-perso-dot"></span>'+(pe.heure?'<span class="cal-time">'+escHtml(pe.heure)+'</span>':'')+'<span class="cal-svc">'+escHtml(pe.titre)+'</span><span class="cal-perso-del" onclick="deletePersoEvent('+pe.id+')">🗑</span></div>';
       });
     } else {
       h+='<span class="cal-none">—</span>';
