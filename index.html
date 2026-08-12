@@ -1212,23 +1212,29 @@ function renderCalAdmin(){
     var d=new Date(today.getTime());d.setDate(today.getDate()+i);
     var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
-    var dayBks=S.bookings.filter(function(bk){return bk.slotIso===iso;});
-    dayBks.sort(function(a,b){return (a.slot||'').localeCompare(b.slot||'');});
-    var dayPerso=persoEvents.filter(function(pe){return pe.date_evt===iso;});
-    dayPerso.sort(function(a,b){return (a.heure_evt||'').localeCompare(b.heure_evt||'');});
-    var empty=dayBks.length===0&&dayPerso.length===0;
+    var dayBks=S.bookings.filter(function(bk){return bk.slotIso===iso;}).map(function(bk){
+      return {kind:'bk',time:(bk.slot||'').split(' à ')[1]||'',data:bk};
+    });
+    var dayPerso=persoEvents.filter(function(pe){return pe.date_evt===iso;}).map(function(pe){
+      return {kind:'perso',time:(pe.heure_evt||'').slice(0,5),data:pe};
+    });
+    var dayItems=dayBks.concat(dayPerso);
+    dayItems.sort(function(a,b){return a.time.localeCompare(b.time);});
+    var empty=dayItems.length===0;
     h+='<div class="cal-day">';
     h+='<div class="cal-date'+(empty?' empty':'')+'">'+label+'</div>';
     h+='<div class="cal-bks">';
     if(!empty){
-      dayBks.forEach(function(bk){
-        var time=(bk.slot||'').split(' à ')[1]||'';
-        var _calReq=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
-        h+='<div class="cal-bk"><span class="cal-time">'+time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(_calReq&&_calReq.count&&_calReq.count!=='?'?'<span class="cal-who">🔢 '+_calReq.count+' locks</span>':'')+'</div>';
-      });
-      dayPerso.forEach(function(pe){
-        var col=pe.couleur||'#5BA873';
-        h+='<div class="cal-bk perso" style="--_pc-bg:'+col+'22;--_pc-border:'+col+'55;--_pc-dot:'+col+'"><span class="cal-perso-dot"></span>'+(pe.heure_evt?'<span class="cal-time">'+escHtml(pe.heure_evt)+'</span>':'')+'<span class="cal-svc">'+escHtml(pe.titre)+'</span><span class="cal-perso-del" onclick="deletePersoEvent(\''+pe.id+'\')">🗑</span></div>';
+      dayItems.forEach(function(item){
+        if(item.kind==='bk'){
+          var bk=item.data;
+          var _calReq=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
+          h+='<div class="cal-bk"><span class="cal-time">'+item.time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(_calReq&&_calReq.count&&_calReq.count!=='?'?'<span class="cal-who">🔢 '+_calReq.count+' locks</span>':'')+'</div>';
+        } else {
+          var pe=item.data;
+          var col=pe.couleur||'#5BA873';
+          h+='<div class="cal-bk perso" style="--_pc-bg:'+col+'22;--_pc-border:'+col+'55;--_pc-dot:'+col+'"><span class="cal-perso-dot"></span>'+(item.time?'<span class="cal-time">'+escHtml(item.time)+'</span>':'')+'<span class="cal-svc">'+escHtml(pe.titre)+'</span><span class="cal-perso-del" onclick="deletePersoEvent(\''+pe.id+'\')">🗑</span></div>';
+        }
       });
     } else {
       h+='<span class="cal-none">—</span>';
