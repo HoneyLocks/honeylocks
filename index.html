@@ -607,8 +607,8 @@ textarea{resize:vertical;min-height:66px}
   <div class="sv" id="vdevis">
     <button class="sv-back" onclick="goSub('vcheck',2)">←</button>
     <h2>Demande de devis</h2><p class="sub">Envoie tes photos pour recevoir ton devis personnalisé.</p>
-    <label>Instagram</label>
-    <div class="ig-wrap"><span class="at">@</span><input type="text" id="d-insta" placeholder="ton pseudo"></div>
+    <label>Instagram <span class="lopt">(obligatoire)</span></label>
+    <div class="ig-wrap"><span class="at">@</span><input type="text" id="d-insta" placeholder="ton pseudo" oninput="checkDevis()"></div>
     <label>Email <span class="lopt">(pour recevoir ton devis)</span></label><input type="email" id="d-email" placeholder="ton@email.com" inputmode="email" oninput="checkDevis()">
     <div id="d-dup-err" class="note" style="display:none;border-left-color:var(--honey);margin-top:8px;font-size:13px"></div>
     <label>Nombre de locks (environ)</label><input type="number" id="d-count" placeholder="ex : 120" inputmode="numeric" min="1" oninput="checkDevis()">
@@ -648,8 +648,9 @@ textarea{resize:vertical;min-height:66px}
   <div class="sv" id="vclient">
     <button class="sv-back" onclick="goSub('vslot',3)">←</button>
     <h2>Tes coordonnées</h2><p class="sub">Pour recevoir ta confirmation de RDV 🍯</p>
-    <label>Instagram</label>
-    <div class="ig-wrap"><span class="at">@</span><input type="text" id="c-insta" placeholder="@ton_instagram"></div>
+    <label>Instagram <span class="lopt">(obligatoire)</span></label>
+    <div class="ig-wrap"><span class="at">@</span><input type="text" id="c-insta" placeholder="@ton_instagram" oninput="checkClient()"></div>
+    <div id="c-insta-err" class="note" style="display:none;border-left-color:var(--honey);margin-top:8px;font-size:13px"></div>
     <label>Email <span class="lopt">(confirmation de réservation)</span></label>
     <input type="email" id="c-email" placeholder="ton@email.com" inputmode="email" oninput="checkClient()">
     <div class="brow"><button class="btn ghost" onclick="goSub(\'vslot\',3)">Retour</button><button class="btn" id="bclient" disabled onclick="fromClient()">Continuer</button></div>
@@ -896,8 +897,9 @@ function checkDevis(){
     return;
   }
   errEl.style.display='none';
+  var insta=document.getElementById('d-insta').value.trim();
   var _dcount=parseInt(document.getElementById('d-count').value)||0;
-  var valid=/.+@.+\..+/.test(email)&&S.curPhotos.length>=1&&_dcount>=1;
+  var valid=/.+@.+\..+/.test(email)&&S.curPhotos.length>=1&&_dcount>=1&&insta.length>=1;
   document.getElementById('bdevis').disabled=!valid;
 }
 function submitDevis(){
@@ -906,10 +908,11 @@ function submitDevis(){
   var errEl=document.getElementById('d-dup-err');
   var dup=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email.toLowerCase();});
   if(dup){errEl.style.display='block';errEl.innerHTML='Tu as déjà une demande en cours chez Honey Locks. Accède à ton espace via le bouton \'J\'ai reçu mon devis\' 🍯';return;}
+  var insta=document.getElementById('d-insta').value.trim();
+  if(!insta){errEl.style.display='block';errEl.innerHTML='Le pseudo Instagram est obligatoire.';return;}
   var count=document.getElementById('d-count').value.trim();
   if(!count||(parseInt(count)||0)<1){errEl.style.display='block';errEl.innerHTML='Le nombre de locks est obligatoire (minimum 1).';return;}
   btn.disabled=true;btn.textContent='Envoi…';
-  var insta=document.getElementById('d-insta').value.trim()||'Cliente';
   var notes=document.getElementById('d-notes').value.trim();
   S.reqs.push({id:Date.now(),name:insta,email:email,count:count||'?',notes:notes,sansCoif:false,avecMeches:false,status:'pending',price:null,photos:S.curPhotos.slice()});
   refreshAdmin();
@@ -1051,14 +1054,26 @@ function toRecap(){
   if(S.type!=='devis'){
     document.getElementById('c-insta').value='';
     document.getElementById('c-email').value='';
+    document.getElementById('c-insta-err').style.display='none';
     document.getElementById('bclient').disabled=true;
     goSub('vclient',4);return;
   }
   _buildRecap();
 }
-function checkClient(){document.getElementById('bclient').disabled=!/.+@.+\..+/.test(document.getElementById('c-email').value);}
+function checkClient(){
+  var insta=document.getElementById('c-insta').value.trim();
+  var emailOk=/.+@.+\..+/.test(document.getElementById('c-email').value);
+  document.getElementById('c-insta-err').style.display='none';
+  document.getElementById('bclient').disabled=!(emailOk&&insta.length>=1);
+}
 function fromClient(){
-  S.clientInsta=document.getElementById('c-insta').value.trim();
+  var insta=document.getElementById('c-insta').value.trim();
+  if(!insta){
+    var errEl=document.getElementById('c-insta-err');
+    errEl.style.display='block';errEl.innerHTML='Le pseudo Instagram est obligatoire.';
+    return;
+  }
+  S.clientInsta=insta;
   S.clientEmail=document.getElementById('c-email').value.trim().toLowerCase();
   _buildRecap();
 }
