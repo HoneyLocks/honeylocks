@@ -34,8 +34,13 @@ module.exports = async (req, res) => {
     try {
       const payload = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString('utf8'))
       role = payload.role || 'inconnu'
-    } catch (e) { role = 'décodage impossible: ' + e.message }
+    } catch (e) { role = 'pas un JWT (format sb_... ou autre ?)' }
     const usingServiceKey = !!process.env.SUPABASE_SERVICE_KEY
+    const keyMeta = {
+      length: key ? key.length : 0,
+      prefix: key ? key.slice(0, 12) : null,
+      dotCount: key ? (key.match(/\./g) || []).length : 0
+    }
     const testRes = await fetch(
       `${process.env.SUPABASE_URL}/storage/v1/object/photos-devis/debug-test.txt`,
       {
@@ -45,7 +50,7 @@ module.exports = async (req, res) => {
       }
     )
     const testBody = await testRes.text().catch(() => '')
-    return res.status(200).json({ usingServiceKey, jwtRole: role, uploadStatus: testRes.status, uploadBody: testBody })
+    return res.status(200).json({ usingServiceKey, jwtRole: role, keyMeta, uploadStatus: testRes.status, uploadBody: testBody })
   }
 
   const id = req.query && req.query.id
