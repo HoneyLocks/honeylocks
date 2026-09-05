@@ -50,7 +50,19 @@ module.exports = async (req, res) => {
       }
     )
     const testBody = await testRes.text().catch(() => '')
-    return res.status(200).json({ usingServiceKey, jwtRole: role, keyMeta, uploadStatus: testRes.status, uploadBody: testBody })
+
+    // Liste tous les buckets vus par cette clé, pour ce SUPABASE_URL précis
+    const bucketsRes = await fetch(`${process.env.SUPABASE_URL}/storage/v1/bucket`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    })
+    const bucketsBody = await bucketsRes.text().catch(() => '')
+
+    return res.status(200).json({
+      supabaseUrl: process.env.SUPABASE_URL,
+      usingServiceKey, jwtRole: role, keyMeta,
+      uploadStatus: testRes.status, uploadBody: testBody,
+      bucketsStatus: bucketsRes.status, bucketsBody: bucketsBody
+    })
   }
 
   const id = req.query && req.query.id
