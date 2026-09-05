@@ -7,6 +7,12 @@ function makeTransport() {
   })
 }
 
+// La clé service_role contourne les policies RLS de storage.objects (le
+// bucket "photos-devis" est privé et n'a pas de policy INSERT pour la clé
+// anon) — sans elle, l'upload échoue systématiquement et retombe sur le
+// base64 brut. À défaut on retente avec SUPABASE_KEY (comportement inchangé).
+const STORAGE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+
 async function uploadPhotoToStorage(base64, index) {
   if (!base64 || !base64.startsWith('data:')) return base64
   const match = base64.match(/^data:([^;]+);base64,(.+)$/)
@@ -21,8 +27,8 @@ async function uploadPhotoToStorage(base64, index) {
       {
         method: 'POST',
         headers: {
-          'apikey': process.env.SUPABASE_KEY,
-          'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+          'apikey': STORAGE_KEY,
+          'Authorization': `Bearer ${STORAGE_KEY}`,
           'Content-Type': mimeType,
           'x-upsert': 'true'
         },
@@ -30,7 +36,9 @@ async function uploadPhotoToStorage(base64, index) {
       }
     )
     if (uploadRes.ok) {
-      return `${process.env.SUPABASE_URL}/storage/v1/object/public/photos-devis/${filename}`
+      // Le bucket reste privé (photos de clientes) : on stocke juste le
+      // chemin, admin-devis.js génère une URL signée à la demande.
+      return filename
     }
     const errBody = await uploadRes.text().catch(() => '')
     console.error('[devis] upload photo échoué, statut:', uploadRes.status, errBody)

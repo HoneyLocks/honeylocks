@@ -41,11 +41,43 @@ module.exports = async (req, res) => {
       }
     )
     const rows = await sbRes.json()
-    let photos = []
+    let rawPhotos = []
     try {
       const noteObj = JSON.parse((Array.isArray(rows) && rows[0] && rows[0].notes) || '{}')
-      photos = Array.isArray(noteObj.photos) ? noteObj.photos : []
+      rawPhotos = Array.isArray(noteObj.photos) ? noteObj.photos : []
     } catch (e) {}
+
+    // Le bucket "photos-devis" est privé : les entrées uploadées avec succès
+    // ne contiennent qu'un chemin de fichier (ex: "devis-123-0.jpg"), il faut
+    // une URL signée pour les afficher. Les anciennes entrées en base64
+    // ("data:...") ou déjà en URL complète ("http...") sont renvoyées telles quelles.
+    const storageKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+    const photos = await Promise.all(rawPhotos.map(async p => {
+      if (!p || p.startsWith('data:') || p.startsWith('http')) return p
+      try {
+        const signRes = await fetch(
+          `${process.env.SUPABASE_URL}/storage/v1/object/sign/photos-devis/${p}`,
+          {
+            method: 'POST',
+            headers: {
+              'apikey': storageKey,
+              'Authorization': `Bearer ${storageKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ expiresIn: 3600 })
+          }
+        )
+        const signData = await signRes.json()
+        if (signRes.ok && signData.signedURL) {
+          return `${process.env.SUPABASE_URL}/storage/v1${signData.signedURL}`
+        }
+        console.error('[admin-devis] signature URL échouée pour', p, signRes.status, JSON.stringify(signData))
+      } catch (e) {
+        console.error('[admin-devis] erreur signature URL:', e.message)
+      }
+      return p
+    }))
+
     return res.status(200).json({ photos })
   }
 
