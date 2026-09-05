@@ -26,6 +26,28 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'GET') return res.status(405).end()
 
+  // Diagnostic temporaire : vérifie la clé service_role et tente un vrai
+  // upload de test pour voir l'erreur exacte renvoyée par Supabase Storage.
+  if (req.query && req.query.debug === 'storage') {
+    const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+    let role = 'inconnu'
+    try {
+      const payload = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString('utf8'))
+      role = payload.role || 'inconnu'
+    } catch (e) { role = 'décodage impossible: ' + e.message }
+    const usingServiceKey = !!process.env.SUPABASE_SERVICE_KEY
+    const testRes = await fetch(
+      `${process.env.SUPABASE_URL}/storage/v1/object/photos-devis/debug-test.txt`,
+      {
+        method: 'POST',
+        headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'text/plain', 'x-upsert': 'true' },
+        body: 'debug'
+      }
+    )
+    const testBody = await testRes.text().catch(() => '')
+    return res.status(200).json({ usingServiceKey, jwtRole: role, uploadStatus: testRes.status, uploadBody: testBody })
+  }
+
   const id = req.query && req.query.id
 
   // Chargement à la demande des photos d'une seule demande (évite de renvoyer
