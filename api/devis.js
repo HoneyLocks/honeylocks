@@ -32,6 +32,8 @@ async function uploadPhotoToStorage(base64, index) {
     if (uploadRes.ok) {
       return `${process.env.SUPABASE_URL}/storage/v1/object/public/photos-devis/${filename}`
     }
+    const errBody = await uploadRes.text().catch(() => '')
+    console.error('[devis] upload photo échoué, statut:', uploadRes.status, errBody)
   } catch (e) {
     console.error('[devis] upload photo erreur:', e.message)
   }
