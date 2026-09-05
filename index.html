@@ -705,7 +705,7 @@ textarea{resize:vertical;min-height:66px}
     <button class="atab" onclick="atab('cal',this)">Calendrier</button>
     <button class="atab" onclick="atab('slots',this)">Créneaux</button>
   </div>
-  <div class="apanel active" id="ap-quotes"><div id="areq"></div></div>
+  <div class="apanel active" id="ap-quotes"><input type="text" id="devis-search" placeholder="Rechercher par pseudo Instagram ou email…" style="margin-bottom:12px" oninput="refreshAdmin()"><div id="areq"></div></div>
   <div class="apanel" id="ap-bookings"><div id="abk"></div></div>
   <div class="apanel" id="ap-cal">
     <button class="btn-perso-add" onclick="togglePersoForm()">➕ Ajouter un événement perso</button>
@@ -1142,7 +1142,9 @@ function refreshAdmin(){
   var p=S.reqs.filter(function(r){return r.status==='pending'}).length;
   document.getElementById('st-p').textContent=p;document.getElementById('st-r').textContent=S.rdv;document.getElementById('st-c').textContent=S.ac+'€';
   var h='';
-  S.reqs.slice().sort(function(a,b){var ap=a.status==='pending'?0:1,bp=b.status==='pending'?0:1;if(ap!==bp)return ap-bp;return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
+  var devisSearchEl=document.getElementById('devis-search');
+  var devisSearch=devisSearchEl?devisSearchEl.value.trim().toLowerCase():'';
+  S.reqs.filter(function(r){return!devisSearch||(r.name||'').toLowerCase().indexOf(devisSearch)!==-1||(r.email||'').toLowerCase().indexOf(devisSearch)!==-1;}).sort(function(a,b){var ap=a.status==='pending'?0:1,bp=b.status==='pending'?0:1;if(ap!==bp)return ap-bp;return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
     h+='<div class="req '+r.status+'"><div class="rqh"><span class="rqn">@'+r.name+'</span><span class="rqs '+r.status+'">'+(r.status==='pending'?'À traiter':'Devis envoyé')+'</span></div>';
     h+='<div class="rqd">🔢 '+r.count+' locks</div>';
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
@@ -1156,7 +1158,7 @@ function refreshAdmin(){
     h+='<div class="bk-actions" style="margin-top:8px"><button class="bk-del" onclick="deleteDevis(\''+r.id+'\')">🗑 Supprimer</button></div>';
     h+='</div>';
   });
-  document.getElementById('areq').innerHTML=h||'<div class="empty">Aucune demande.</div>';
+  document.getElementById('areq').innerHTML=h||'<div class="empty">'+(devisSearch?'Aucun résultat pour cette recherche.':'Aucune demande.')+'</div>';
   var b='';
   var _bkToday=new Date();_bkToday.setHours(0,0,0,0);var _bkTodayIso=isoFmt(_bkToday);
   var _futureBks=S.bookings.slice().filter(function(bk){return!bk.slotIso||bk.slotIso>=_bkTodayIso;}).sort(function(a,b2){if(a.slotIso!==b2.slotIso)return(a.slotIso||'').localeCompare(b2.slotIso||'');return((a.slot||'').split(' à ')[1]||'').localeCompare(((b2.slot||'').split(' à ')[1])||'');});
