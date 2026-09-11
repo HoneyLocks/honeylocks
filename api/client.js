@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
 
   try {
     const response = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=ilike.${encodeURIComponent(email.toLowerCase())}&select=*&order=created_at.desc&limit=1`,
+      `${process.env.SUPABASE_URL}/rest/v1/reservations?cliente_email=ilike.${encodeURIComponent(email.toLowerCase())}&statut=eq.devis&select=*&order=created_at.desc&limit=1`,
       {
         headers: {
           'apikey': process.env.SUPABASE_KEY,
@@ -31,9 +31,7 @@ module.exports = async (req, res) => {
       }
 
       // Devis soumis mais pas encore chiffré
-      if (rdv.statut === 'devis') {
-        return res.status(200).json({ pending: true })
-      }
+      return res.status(200).json({ pending: true })
     }
 
     res.status(200).json({ found: false })
