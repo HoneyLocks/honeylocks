@@ -26,6 +26,22 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'GET') return res.status(405).end()
 
+  // Audit temporaire : toutes les réservations tous statuts confondus, pour
+  // détecter les clientes affectées par le bug /api/client corrigé le 2026-09-11
+  // (retiré une fois l'audit terminé).
+  if (req.query && req.query.debug === 'audit-client-bug') {
+    const auditHeaders = {
+      'apikey': process.env.SUPABASE_KEY,
+      'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+    }
+    const sbRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/reservations?select=id,cliente_email,cliente_nom,statut,prix,created_at&order=created_at.asc`,
+      { headers: auditHeaders }
+    )
+    const data = await sbRes.json()
+    return res.status(200).json(Array.isArray(data) ? data : [])
+  }
+
   const id = req.query && req.query.id
   const sbHeaders = {
     'apikey': process.env.SUPABASE_KEY,
