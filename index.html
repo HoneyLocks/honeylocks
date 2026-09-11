@@ -287,7 +287,9 @@ textarea{resize:vertical;min-height:66px}
 .bk .meta{font-size:12px;color:var(--dim);margin-bottom:8px}
 .bk-actions{display:flex;gap:8px;flex-wrap:wrap}
 .bk-actions button{flex:1;min-width:46%;border:none;border-radius:9px;padding:9px;font-family:inherit;font-size:12px;cursor:pointer}
-.bk-ok{background:rgba(255,255,255,.07);color:var(--dim);border:1px solid var(--border)!important}.bk-ok.paid{background:var(--success);color:#fff;border-color:var(--success)!important}.bk-rappel{background:rgba(201,168,76,.15);color:var(--honey);border:1px solid rgba(201,168,76,.3)!important}.bk-del{background:rgba(196,106,90,.2);color:var(--danger);border:1px solid rgba(196,106,90,.3)!important}
+.bk-ok{background:rgba(255,255,255,.07);color:var(--dim);border:1px solid var(--border)!important}.bk-ok.paid{background:var(--success);color:#fff;border-color:var(--success)!important}.bk-rappel{background:rgba(201,168,76,.15);color:var(--honey);border:1px solid rgba(201,168,76,.3)!important}.bk-del{background:rgba(196,106,90,.2);color:var(--danger);border:1px solid rgba(196,106,90,.3)!important}.bk-resched{background:rgba(91,168,115,.15);color:#5BA873;border:1px solid rgba(91,168,115,.3)!important}
+.crdv-result{padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-top:6px;cursor:pointer;font-size:13px}
+.crdv-result:hover{border-color:var(--honey)}
 .empty{font-size:13px;color:var(--dim);text-align:center;padding:24px 0}
 .aday{margin-bottom:18px}
 .aday-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -706,7 +708,31 @@ textarea{resize:vertical;min-height:66px}
     <button class="atab" onclick="atab('slots',this)">Créneaux</button>
   </div>
   <div class="apanel active" id="ap-quotes"><input type="text" id="devis-search" placeholder="Rechercher par pseudo Instagram ou email…" style="margin-bottom:12px" oninput="refreshAdmin()"><div id="areq"></div></div>
-  <div class="apanel" id="ap-bookings"><div id="abk"></div></div>
+  <div class="apanel" id="ap-bookings">
+    <button class="btn-perso-add" onclick="toggleCreateRdv()">➕ Créer un RDV</button>
+    <div id="crdv-form" class="perso-form" style="display:none">
+      <label>Rechercher un devis validé (pseudo Instagram ou email)</label>
+      <input type="text" id="crdv-search" placeholder="Rechercher…" oninput="searchCrdvDevis()">
+      <div id="crdv-results"></div>
+      <label>Pseudo Instagram</label>
+      <input type="text" id="crdv-insta" placeholder="pseudo">
+      <label>Email</label>
+      <input type="email" id="crdv-email" placeholder="email@exemple.com">
+      <label>Prestation</label>
+      <input type="text" id="crdv-service" placeholder="Prestation">
+      <label>Prix (€)</label>
+      <input type="number" id="crdv-prix" placeholder="Prix" inputmode="numeric">
+      <label>Date</label>
+      <input type="date" id="crdv-date">
+      <label>Heure</label>
+      <input type="time" id="crdv-heure">
+      <div class="brow" style="margin-top:14px">
+        <button class="btn ghost" onclick="toggleCreateRdv()">Annuler</button>
+        <button class="btn" id="crdv-submit" onclick="submitCreateRdv()">Créer le RDV</button>
+      </div>
+    </div>
+    <div id="abk"></div>
+  </div>
   <div class="apanel" id="ap-cal">
     <button class="btn-perso-add" onclick="togglePersoForm()">➕ Ajouter un événement perso</button>
     <div id="perso-form" class="perso-form" style="display:none">
@@ -735,7 +761,7 @@ var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,a
   inspo:false,fulaniFront:null,fulaniBack:null,sansCoif:false,
   curPhotos:[],inspoPhotos:[],
   reqs:[],
-  bookings:[],rdv:0,ac:0,slots:{},persoEvents:[]};
+  bookings:[],rdv:0,ac:0,slots:{},persoEvents:[],reschedulingId:null};
 
 /* PAGE NAV */
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active')});document.getElementById(p).classList.add('active');document.querySelectorAll('.drawer-panel a').forEach(function(a){a.classList.remove('active')});closeDrawer();window.scrollTo(0,0);if(p==='reserve')resetRes()}
@@ -1134,7 +1160,23 @@ function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
-function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){S.reqs=[];rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:[],photoCount:row.photoCount||0,photosLoaded:false});}});refreshAdmin();}).catch(function(){});fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){S.bookings=[];rows.forEach(function(row){if(row.statut==='annulé')return;var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];if(localMatch){localMatch.id=row.id;return;}var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});});S.rdv=S.bookings.length;refreshAdmin();}).catch(function(){});fetch('/api/perso-events').then(function(r){return r.json();}).then(function(rows){S.persoEvents=Array.isArray(rows)?rows:[];renderCalAdmin();}).catch(function(){});}
+function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){S.reqs=[];rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:[],photoCount:row.photoCount||0,photosLoaded:false});}});refreshAdmin();}).catch(function(){});loadAdminBookings();fetch('/api/perso-events').then(function(r){return r.json();}).then(function(rows){S.persoEvents=Array.isArray(rows)?rows:[];renderCalAdmin();}).catch(function(){});}
+function loadAdminBookings(){
+  fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){
+    S.bookings=[];
+    rows.forEach(function(row){
+      if(row.statut==='annulé')return;
+      var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];
+      if(localMatch){localMatch.id=row.id;return;}
+      var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;
+      var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;
+      var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}
+      S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
+    });
+    S.rdv=S.bookings.length;
+    refreshAdmin();
+  }).catch(function(){});
+}
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
 function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
 function refreshAdmin(){
@@ -1173,7 +1215,17 @@ function refreshAdmin(){
     if(bk.inspoPhotos&&bk.inspoPhotos.length){bkExtra+='<div class="rqd">💫 Photos inspiration ('+bk.inspoPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.inspoPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok'+(bk.acomptePaye?' paid':'')+'" onclick="markAcompte(\''+bk.id+'\','+(!bk.acomptePaye)+')">'+(bk.acomptePaye?'✅ Acompte reçu':'⏳ Acompte reçu')+'</button>';
     if(bk.email)b+='<button class="bk-rappel" onclick="sendRappel('+bk.id+')">💸 Rappel acompte</button>';
-    b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div></div>';
+    b+='<button class="bk-resched" onclick="openReschedule(\''+bk.id+'\')">📅 Décaler</button>';
+    b+='<button class="bk-del" onclick="delBk('+bk.id+')">🗑 Annuler RDV</button></div>';
+    if(String(S.reschedulingId)===String(bk.id)){
+      b+='<div class="qin" style="flex-wrap:wrap;margin-top:10px">'
+        +'<input type="date" id="resched-date-'+bk.id+'" value="'+(bk.slotIso||'')+'">'
+        +'<input type="time" id="resched-heure-'+bk.id+'" value="'+(bk.heureIso||'')+'">'
+        +'<button onclick="submitReschedule(\''+bk.id+'\')">Valider</button>'
+        +'<button class="btn ghost" style="padding:0 16px" onclick="cancelReschedule()">Annuler</button>'
+        +'</div>';
+    }
+    b+='</div>';
   });
   if(!b)b='<div class="empty">Aucune réservation à venir.</div>';
   document.getElementById('abk').innerHTML=b;
@@ -1393,6 +1445,76 @@ function markAcompte(id,paid){
       if(d.success){var bk=S.bookings.find(function(b){return b.id==id});if(bk)bk.acomptePaye=paid;refreshAdmin();}
       else alert('Erreur lors de la mise à jour.');
     }).catch(function(){alert('Erreur réseau.');});
+}
+function openReschedule(id){S.reschedulingId=id;refreshAdmin();}
+function cancelReschedule(){S.reschedulingId=null;refreshAdmin();}
+function submitReschedule(id){
+  var dateEl=document.getElementById('resched-date-'+id);
+  var heureEl=document.getElementById('resched-heure-'+id);
+  var date_rdv=dateEl?dateEl.value:'';
+  var heure_rdv=heureEl?heureEl.value:'';
+  if(!date_rdv||!heure_rdv){alert('Merci de choisir une date et une heure.');return;}
+  fetch('/api/admin-bookings',{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:id,date_rdv:date_rdv,heure_rdv:heure_rdv})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success){S.reschedulingId=null;loadAdminBookings();}
+    else alert('Erreur : '+(d.error||'inconnue'));
+  }).catch(function(){alert('Erreur réseau.');});
+}
+function toggleCreateRdv(){
+  var f=document.getElementById('crdv-form');
+  var open=f.style.display==='block';
+  f.style.display=open?'none':'block';
+  if(!open){
+    document.getElementById('crdv-search').value='';
+    document.getElementById('crdv-results').innerHTML='';
+    document.getElementById('crdv-insta').value='';
+    document.getElementById('crdv-email').value='';
+    document.getElementById('crdv-service').value='';
+    document.getElementById('crdv-prix').value='';
+    document.getElementById('crdv-date').value='';
+    document.getElementById('crdv-heure').value='';
+  }
+}
+function searchCrdvDevis(){
+  var q=document.getElementById('crdv-search').value.trim().toLowerCase();
+  var el=document.getElementById('crdv-results');
+  if(!q){el.innerHTML='';return;}
+  var matches=S.reqs.filter(function(r){return r.status==='quoted'&&((r.name||'').toLowerCase().indexOf(q)!==-1||(r.email||'').toLowerCase().indexOf(q)!==-1);}).slice(0,8);
+  el.innerHTML=matches.length?matches.map(function(r){
+    return '<div class="crdv-result" onclick="selectCrdvDevis(\''+r.id+'\')">@'+r.name+' · '+(r.email||'—')+' · '+(r.notes||'Devis')+' · '+r.price+'€</div>';
+  }).join(''):'<div class="empty" style="padding:8px">Aucun devis validé trouvé.</div>';
+}
+function selectCrdvDevis(id){
+  var r=S.reqs.filter(function(x){return String(x.id)===String(id);})[0];
+  if(!r)return;
+  document.getElementById('crdv-insta').value=r.name||'';
+  document.getElementById('crdv-email').value=r.email||'';
+  document.getElementById('crdv-service').value=r.notes||'Retwist + Coiffure';
+  document.getElementById('crdv-prix').value=r.price||'';
+  document.getElementById('crdv-search').value='';
+  document.getElementById('crdv-results').innerHTML='';
+}
+function submitCreateRdv(){
+  var insta=document.getElementById('crdv-insta').value.trim();
+  var email=document.getElementById('crdv-email').value.trim();
+  var service=document.getElementById('crdv-service').value.trim();
+  var prix=document.getElementById('crdv-prix').value.trim();
+  var date_rdv=document.getElementById('crdv-date').value;
+  var heure_rdv=document.getElementById('crdv-heure').value;
+  if(!insta||!email||!service||!prix||!date_rdv||!heure_rdv){alert('Merci de remplir tous les champs.');return;}
+  var btn=document.getElementById('crdv-submit');
+  btn.disabled=true;btn.textContent='Création…';
+  fetch('/api/reservation',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nom:insta,prenom:'',email:email,service:service,date_rdv:date_rdv,heure_rdv:heure_rdv,prix:prix,acompte:ACOMPTE_DEVIS})
+  }).then(function(r){return r.json();}).then(function(d){
+    btn.disabled=false;btn.textContent='Créer le RDV';
+    if(d.success){toggleCreateRdv();loadAdminBookings();alert('RDV créé et mail envoyé ✅');}
+    else alert('Erreur lors de la création.');
+  }).catch(function(){btn.disabled=false;btn.textContent='Créer le RDV';alert('Erreur réseau.');});
 }
 /* Persistence S.bookings via localStorage */
 function saveBookings(){
