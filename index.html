@@ -707,7 +707,7 @@ textarea{resize:vertical;min-height:66px}
     <button class="atab" onclick="atab('cal',this)">Calendrier</button>
     <button class="atab" onclick="atab('slots',this)">Créneaux</button>
   </div>
-  <div class="apanel active" id="ap-quotes"><input type="text" id="devis-search" placeholder="Rechercher par pseudo Instagram ou email…" style="margin-bottom:12px" oninput="refreshAdmin()"><div id="areq"></div></div>
+  <div class="apanel active" id="ap-quotes"><input type="text" id="devis-search" placeholder="Rechercher par pseudo Instagram ou email…" style="margin-bottom:12px" oninput="onDevisSearchInput()"><div id="areq"></div></div>
   <div class="apanel" id="ap-bookings">
     <button class="btn-perso-add" onclick="toggleCreateRdv()">➕ Créer un RDV</button>
     <div id="crdv-form" class="perso-form" style="display:none">
@@ -761,7 +761,8 @@ var S={id:null,name:null,type:null,base:0,size:null,opts:[],optTotal:0,price:0,a
   inspo:false,fulaniFront:null,fulaniBack:null,sansCoif:false,
   curPhotos:[],inspoPhotos:[],
   reqs:[],
-  bookings:[],rdv:0,ac:0,slots:{},persoEvents:[],reschedulingId:null};
+  bookings:[],rdv:0,ac:0,slots:{},persoEvents:[],reschedulingId:null,
+  quotedOffset:0,quotedTotal:0,devisSearchActive:false,devisSearchResults:[],crdvResults:[]};
 
 /* PAGE NAV */
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active')});document.getElementById(p).classList.add('active');document.querySelectorAll('.drawer-panel a').forEach(function(a){a.classList.remove('active')});closeDrawer();window.scrollTo(0,0);if(p==='reserve')resetRes()}
@@ -1160,7 +1161,58 @@ function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
-function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();fetch('/api/admin-devis').then(function(r){return r.json();}).then(function(rows){S.reqs=[];rows.forEach(function(row){var email=(row.cliente_email||'').toLowerCase();var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});if(!exists){var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));var n=row.notes||'';var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}var msgText=noteObj.message||n;var countMatch=msgText.match(/(\d+)\s*locks/i);var parsedCount=countMatch?countMatch[1]:'?';var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();S.reqs.push({id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:[],photoCount:row.photoCount||0,photosLoaded:false});}});refreshAdmin();}).catch(function(){});loadAdminBookings();fetch('/api/perso-events').then(function(r){return r.json();}).then(function(rows){S.persoEvents=Array.isArray(rows)?rows:[];renderCalAdmin();}).catch(function(){});}
+function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();loadAdminDevis();loadAdminBookings();fetch('/api/perso-events').then(function(r){return r.json();}).then(function(rows){S.persoEvents=Array.isArray(rows)?rows:[];renderCalAdmin();}).catch(function(){});}
+function parseDevisRow(row){
+  var email=(row.cliente_email||'').toLowerCase();
+  var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;
+  var isQuoted=prixRaw&&prixRaw.toLowerCase()!=='sur devis'&&!isNaN(parseFloat(prixRaw));
+  var n=row.notes||'';
+  var noteObj={};try{noteObj=JSON.parse(n);}catch(e){}
+  var msgText=noteObj.message||n;
+  var countMatch=msgText.match(/(\d+)\s*locks/i);
+  var parsedCount=countMatch?countMatch[1]:'?';
+  var parsedNotes=msgText.replace(/\d+\s*locks/i,'').replace(/Vanilles \+ mèches bouclées[^\n]*/,'').replace(/Sans coiffure protectrice[^\n]*/,'').trim();
+  return {id:row.id||Date.now(),name:(row.cliente_nom||email).split(' ')[0],email:row.cliente_email||'',count:parsedCount,notes:parsedNotes||row.service||'',sansCoif:msgText.includes('Sans coiffure'),avecMeches:msgText.includes('mèches bouclées'),status:isQuoted?'quoted':'pending',price:isQuoted?prixRaw:null,photos:[],photoCount:row.photoCount||0,photosLoaded:false};
+}
+function loadAdminDevis(){
+  S.quotedOffset=0;
+  fetch('/api/admin-devis?quotedOffset=0').then(function(r){return r.json();}).then(function(data){
+    S.reqs=[];
+    (data.pending||[]).concat(data.quoted||[]).forEach(function(row){
+      var email=(row.cliente_email||'').toLowerCase();
+      var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});
+      if(!exists)S.reqs.push(parseDevisRow(row));
+    });
+    S.quotedOffset=(data.quoted||[]).length;
+    S.quotedTotal=data.quotedTotal||0;
+    refreshAdmin();
+  }).catch(function(){});
+}
+function loadMoreDevis(){
+  fetch('/api/admin-devis?quotedOffset='+S.quotedOffset).then(function(r){return r.json();}).then(function(data){
+    (data.quoted||[]).forEach(function(row){
+      var email=(row.cliente_email||'').toLowerCase();
+      var exists=S.reqs.some(function(r){return r.email&&r.email.toLowerCase()===email;});
+      if(!exists)S.reqs.push(parseDevisRow(row));
+    });
+    S.quotedOffset+=(data.quoted||[]).length;
+    S.quotedTotal=data.quotedTotal||S.quotedTotal;
+    refreshAdmin();
+  }).catch(function(){});
+}
+var _devisSearchTimer=null;
+function onDevisSearchInput(){
+  clearTimeout(_devisSearchTimer);
+  var term=document.getElementById('devis-search').value.trim();
+  if(!term){S.devisSearchActive=false;S.devisSearchResults=[];refreshAdmin();return;}
+  _devisSearchTimer=setTimeout(function(){
+    fetch('/api/admin-devis?search='+encodeURIComponent(term)).then(function(r){return r.json();}).then(function(data){
+      S.devisSearchActive=true;
+      S.devisSearchResults=(data.results||[]).map(parseDevisRow);
+      refreshAdmin();
+    }).catch(function(){});
+  },300);
+}
 function loadAdminBookings(){
   fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){
     S.bookings=[];
@@ -1184,9 +1236,9 @@ function refreshAdmin(){
   var p=S.reqs.filter(function(r){return r.status==='pending'}).length;
   document.getElementById('st-p').textContent=p;document.getElementById('st-r').textContent=S.rdv;document.getElementById('st-c').textContent=S.ac+'€';
   var h='';
-  var devisSearchEl=document.getElementById('devis-search');
-  var devisSearch=devisSearchEl?devisSearchEl.value.trim().toLowerCase():'';
-  S.reqs.filter(function(r){return!devisSearch||(r.name||'').toLowerCase().indexOf(devisSearch)!==-1||(r.email||'').toLowerCase().indexOf(devisSearch)!==-1;}).sort(function(a,b){var ap=a.status==='pending'?0:1,bp=b.status==='pending'?0:1;if(ap!==bp)return ap-bp;return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
+  var devisSearch=S.devisSearchActive;
+  var devisList=devisSearch?S.devisSearchResults:S.reqs;
+  devisList.slice().sort(function(a,b){var ap=a.status==='pending'?0:1,bp=b.status==='pending'?0:1;if(ap!==bp)return ap-bp;return(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'});}).forEach(function(r){
     h+='<div class="req '+r.status+'"><div class="rqh"><span class="rqn">@'+r.name+'</span><span class="rqs '+r.status+'">'+(r.status==='pending'?'À traiter':'Devis envoyé')+'</span></div>';
     h+='<div class="rqd">🔢 '+r.count+' locks</div>';
     if(r.email)h+='<div class="rqd">✉️ '+r.email+'</div>';
@@ -1200,6 +1252,7 @@ function refreshAdmin(){
     h+='<div class="bk-actions" style="margin-top:8px"><button class="bk-del" onclick="deleteDevis(\''+r.id+'\')">🗑 Supprimer</button></div>';
     h+='</div>';
   });
+  if(!devisSearch&&S.quotedOffset<S.quotedTotal){h+='<button class="btn ghost" style="width:100%;margin-top:4px" onclick="loadMoreDevis()">Charger plus de devis ('+S.quotedOffset+'/'+S.quotedTotal+')</button>';}
   document.getElementById('areq').innerHTML=h||'<div class="empty">'+(devisSearch?'Aucun résultat pour cette recherche.':'Aucune demande.')+'</div>';
   var b='';
   var _bkToday=new Date();_bkToday.setHours(0,0,0,0);var _bkTodayIso=isoFmt(_bkToday);
@@ -1377,8 +1430,9 @@ function sendQuote(id){
   var r=S.reqs.filter(function(x){return x.id===id})[0];
   if(!r){console.log('sendQuote: req introuvable id=',id);return;}
   console.log('sendQuote: email=',r.email,'prix=',v);
-  if(!r.email){console.log('sendQuote: pas d\'email pour cette demande, annulation envoi');r.status='quoted';r.price=v;refreshAdmin();return;}
-  r.status='quoted';r.price=v;refreshAdmin();
+  var rSearch=S.devisSearchResults.filter(function(x){return x.id===id;})[0];
+  if(!r.email){console.log('sendQuote: pas d\'email pour cette demande, annulation envoi');r.status='quoted';r.price=v;if(rSearch){rSearch.status='quoted';rSearch.price=v;}refreshAdmin();return;}
+  r.status='quoted';r.price=v;if(rSearch){rSearch.status='quoted';rSearch.price=v;}refreshAdmin();
   fetch('/api/devis',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -1400,6 +1454,7 @@ function sendQuote(id){
 function deleteDevis(id){
   if(!confirm('Supprimer ce devis ?'))return;
   S.reqs=S.reqs.filter(function(x){return String(x.id)!==String(id)});
+  S.devisSearchResults=S.devisSearchResults.filter(function(x){return String(x.id)!==String(id);});
   refreshAdmin();
   fetch('/api/admin-devis?id='+encodeURIComponent(id),{method:'DELETE'}).catch(function(){});
 }
@@ -1470,6 +1525,7 @@ function toggleCreateRdv(){
   if(!open){
     document.getElementById('crdv-search').value='';
     document.getElementById('crdv-results').innerHTML='';
+    S.crdvResults=[];
     document.getElementById('crdv-insta').value='';
     document.getElementById('crdv-email').value='';
     document.getElementById('crdv-service').value='';
@@ -1478,17 +1534,23 @@ function toggleCreateRdv(){
     document.getElementById('crdv-heure').value='';
   }
 }
+var _crdvSearchTimer=null;
 function searchCrdvDevis(){
-  var q=document.getElementById('crdv-search').value.trim().toLowerCase();
+  clearTimeout(_crdvSearchTimer);
+  var q=document.getElementById('crdv-search').value.trim();
   var el=document.getElementById('crdv-results');
-  if(!q){el.innerHTML='';return;}
-  var matches=S.reqs.filter(function(r){return r.status==='quoted'&&((r.name||'').toLowerCase().indexOf(q)!==-1||(r.email||'').toLowerCase().indexOf(q)!==-1);}).slice(0,8);
-  el.innerHTML=matches.length?matches.map(function(r){
-    return '<div class="crdv-result" onclick="selectCrdvDevis(\''+r.id+'\')">@'+r.name+' · '+(r.email||'—')+' · '+(r.notes||'Devis')+' · '+r.price+'€</div>';
-  }).join(''):'<div class="empty" style="padding:8px">Aucun devis validé trouvé.</div>';
+  if(!q){el.innerHTML='';S.crdvResults=[];return;}
+  _crdvSearchTimer=setTimeout(function(){
+    fetch('/api/admin-devis?search='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(data){
+      S.crdvResults=(data.results||[]).map(parseDevisRow).filter(function(r){return r.status==='quoted';}).slice(0,8);
+      el.innerHTML=S.crdvResults.length?S.crdvResults.map(function(r){
+        return '<div class="crdv-result" onclick="selectCrdvDevis(\''+r.id+'\')">@'+r.name+' · '+(r.email||'—')+' · '+(r.notes||'Devis')+' · '+r.price+'€</div>';
+      }).join(''):'<div class="empty" style="padding:8px">Aucun devis validé trouvé.</div>';
+    }).catch(function(){});
+  },300);
 }
 function selectCrdvDevis(id){
-  var r=S.reqs.filter(function(x){return String(x.id)===String(id);})[0];
+  var r=S.crdvResults.filter(function(x){return String(x.id)===String(id);})[0];
   if(!r)return;
   document.getElementById('crdv-insta').value=r.name||'';
   document.getElementById('crdv-email').value=r.email||'';
