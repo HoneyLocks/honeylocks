@@ -996,6 +996,11 @@ function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var 
 function simQuote(){S.price=65;buildSlots().then(function(){goSub('vslot',3);});}
 
 function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function initSlotsForRange(start,end){
+  var def=['10:30','14:30','18:30'];
+  var d=new Date(start.getTime());
+  while(d<=end){var iso=isoFmt(d);if(!S.slots[iso])S.slots[iso]=def.map(function(t){return{time:t,on:false};});d.setDate(d.getDate()+1);}
+}
 function buildSlots(){
   var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   var moisFr=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
@@ -1384,6 +1389,9 @@ function _doRenderSlotsAdmin(){
 function renderSlotsAdmin(){
   var el=document.getElementById('ap-slots');
   if(!el)return;
+  var firstDay=new Date(_aCalYear,_aCalMonth,1);
+  var lastDay=new Date(_aCalYear,_aCalMonth+1,0);
+  initSlotsForRange(firstDay,lastDay);
   el.innerHTML='<div style="text-align:center;padding:20px;opacity:.5">Chargement…<\/div>';
   fetch('/api/slots')
     .then(function(r){return r.json();})
