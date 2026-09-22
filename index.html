@@ -46,7 +46,7 @@
     "name": "Prestations",
     "itemListElement": [
       {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Tresses africaines"}, "price": "20", "priceCurrency": "EUR"},
-      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Vanilles / Nattes"}, "price": "40", "priceCurrency": "EUR"},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Vanilles / Nattes"}, "price": "45", "priceCurrency": "EUR"},
       {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Départ de locks"}, "price": "65", "priceCurrency": "EUR"},
       {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Retwist + Coiffure"}, "price": "35", "priceCurrency": "EUR"},
       {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Barrel twist / Flat twist"}, "price": "35", "priceCurrency": "EUR"}
@@ -378,7 +378,6 @@ textarea{resize:vertical;min-height:66px}
     <div class="home-card" onclick="go('how')"><div class="ic">✨</div><div><div class="ct">Comment ça marche</div><div class="cd">Le parcours en 3 étapes</div></div></div>
     <div class="home-card" onclick="go('rules')"><div class="ic">📋</div><div><div class="ct">Règlement</div><div class="cd">À lire avant de réserver</div></div></div>
   </div>
-  <div style="padding:8px 18px"><div class="note"><strong>🍯 Offre de bienvenue — Entraînement & contenu</strong><br><span style="font-size:13px">Je développe mes techniques et crée du contenu&nbsp;: toutes les tresses, vanilles & <strong>départs de locks à petit prix</strong>. C'est le moment d'en profiter&nbsp;!</span></div></div>
   <div class="galerie-wrap">
     <div class="galerie-title">Mes réalisations 🍯</div>
     <div class="galerie-track">
@@ -438,7 +437,6 @@ textarea{resize:vertical;min-height:66px}
   <!-- 1 services -->
   <div class="sv active" id="v1">
     <h2>Réserve ta coiffure</h2>
-    <p class="sub">Offre de bienvenue — découverte à petit prix 🍯</p>
 
     <div class="cat-title">Reprise de locks</div>
     <div class="svc" data-id="reprise" data-name="Retwist + Coiffure" data-type="devis" data-base="0" onclick="pick(this)">
@@ -473,10 +471,10 @@ textarea{resize:vertical;min-height:66px}
     <div class="svc-unavailable-note">⚠️ Pour des raisons de santé, ces prestations sont indisponibles pour une durée indéterminée. Merci de votre compréhension 🍯</div>
 
     <div class="cat-title">Vanilles &amp; Twists</div>
-    <div class="svc" data-id="vanilles-nattes" data-name="Vanilles / Nattes" data-type="vanille-taille" data-base="40" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles / Nattes</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 35€</div></div>
-    <div class="svc" data-id="vanilles-fl" data-name="Vanilles fausses locks" data-type="vanille-taille" data-base="40" onclick="pick(this)">
-      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles fausses locks</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 35€</div></div>
+    <div class="svc" data-id="vanilles-nattes" data-name="Vanilles / Nattes" data-type="vanille-taille" data-base="50" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles / Nattes</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
+    <div class="svc" data-id="vanilles-fl" data-name="Vanilles fausses locks" data-type="vanille-taille" data-base="50" onclick="pick(this)">
+      <div class="svc-info"><span class="pill promo">Découverte</span><div class="svc-name">Vanilles fausses locks</div><div class="svc-desc">Médium ou Large · option brushing<br><span style="color:var(--danger);font-size:10.5px">⚠️ Je ne coiffe pas les cheveux courts</span></div></div><div class="svc-price">dès 45€</div></div>
     <div class="svc disabled" data-id="barrel-flat" data-name="Barrel twist / Flat twist" data-type="barrel" data-base="35">
       <div class="svc-info"><span class="pill unavailable">Indisponible</span><div class="svc-name">Barrel twist / Flat twist</div><div class="svc-desc">Option nombre + brushing</div></div><div class="svc-price">Indisponible</div></div>
     <div class="svc disabled" data-id="fulani" data-name="Fulani" data-type="fulani" data-base="45">
@@ -494,6 +492,7 @@ textarea{resize:vertical;min-height:66px}
   <div class="sv" id="vopt">
     <button class="sv-back" onclick="back1()">←</button>
     <h2 id="opt-title">Options</h2><p class="sub">Personnalise ta prestation</p>
+    <p id="vopt-warn-courts" style="display:none;font-size:12.5px;color:var(--danger);font-weight:600;margin:-10px 0 12px">⚠️ Je ne coiffe pas les cheveux de moins de 10 cm.</p>
     <p id="vopt-hint" style="display:none;font-size:12.5px;color:var(--honey);margin:-10px 0 12px"></p>
     <!-- Technique (départ de locks) -->
     <div id="technique-block" style="display:none">
@@ -807,6 +806,7 @@ function from1(){
   document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('selected')});
   document.querySelectorAll('#vopt .opt-row').forEach(function(o){o.classList.remove('selected')});
   document.getElementById('opt-title').textContent=S.name;
+  document.getElementById('vopt-warn-courts').style.display=(S.id==='depart-courts')?'block':'none';
   var _hint=document.getElementById('vopt-hint');
   _hint.style.display='none';
   if(isTLow||isTHigh){_hint.textContent='💡 Le prix de base inclut 4 à 5 tresses.';_hint.style.display='block';}
