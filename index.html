@@ -1117,7 +1117,7 @@ function fromClient(){
 function _buildRecap(){
   var h='<div class="rrow"><span>Prestation</span><span class="v">'+S.name+'</span></div>';
   if(S.size)h+='<div class="rrow"><span>Taille</span><span class="v">'+S.size+'</span></div>';
-  S.opts.forEach(function(o){h+='<div class="rrow"><span>+ '+o.name+'</span><span class="v">+'+o.price+'€</span></div>'});
+  S.opts.forEach(function(o){h+='<div class="rrow"><span>+ '+o.name+'</span><span class="v">'+(o.price>=0?'+':'')+o.price+'€</span></div>'});
   if(S.sansCoif)h+='<div class="rrow"><span>Sans coiffure protectrice</span><span class="v">−5€</span></div>';
   h+='<div class="rrow"><span>Créneau</span><span class="v">'+S.slot+'</span></div>';
   if(S.clientInsta)h+='<div class="rrow"><span>Instagram</span><span class="v">@'+S.clientInsta+'</span></div>';
@@ -1138,7 +1138,7 @@ function pay(){
   S.rdv++;S.ac+=S.acompte;
   var bkEmail=S.clientEmail||document.getElementById('e-email').value.trim().toLowerCase();
   var bkNom=S.clientInsta||S.quotedName||'Cliente';
-  var _optsStr=S.opts.map(function(o){return o.name+(o.price?' (+'+o.price+'€)':'');}).join(' · ');
+  var _optsStr=S.opts.map(function(o){return o.name+(o.price?' ('+(o.price>=0?'+':'')+o.price+'€)':'');}).join(' · ');
   var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
   S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,slotIso:S.slotIso,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail,acomptePaye:false,curPhotos:S.curPhotos.slice(),inspoPhotos:S.inspoPhotos.slice()});
   if(S.slotIso&&S.slots[S.slotIso]){var _hr=S.slot?S.slot.split(' à ')[1]||'':'';S.slots[S.slotIso].forEach(function(s){if(s.time===_hr)s.on=false;});}
