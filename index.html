@@ -1151,7 +1151,7 @@ function pay(){
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       nom:bkNom,
-      prenom:bkNom,
+      prenom:'',
       email:bkEmail,
       telephone:'',
       service:_fullSvc,
@@ -1268,7 +1268,8 @@ function refreshAdmin(){
   var _bkToday=new Date();_bkToday.setHours(0,0,0,0);var _bkTodayIso=isoFmt(_bkToday);
   var _futureBks=S.bookings.slice().filter(function(bk){return!bk.slotIso||bk.slotIso>=_bkTodayIso;}).sort(function(a,b2){if(a.slotIso!==b2.slotIso)return(a.slotIso||'').localeCompare(b2.slotIso||'');return((a.slot||'').split(' à ')[1]||'').localeCompare(((b2.slot||'').split(' à ')[1])||'');});
   _futureBks.forEach(function(bk){
-    var bkMeta=bk.slot+' · '+bk.price+'€ · acompte '+bk.acompte+'€ reçu';
+    var bkReste=Math.max(0,bk.price-bk.acompte);
+    var bkMeta=bk.slot+' · '+bk.price+'€ total · acompte '+bk.acompte+'€ · reste '+bkReste+'€';
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
