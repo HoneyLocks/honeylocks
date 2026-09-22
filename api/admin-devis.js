@@ -1,3 +1,8 @@
+// Insensible casse + accents : "ocean" doit matcher "Océane".
+function normalize(str) {
+  return (str || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
@@ -70,14 +75,22 @@ module.exports = async (req, res) => {
   // Recherche serveur (nom Instagram ou email) sur l'ensemble des devis —
   // ne dépend pas de la pagination, donc retrouve aussi les devis déjà
   // archivés dans les pages non chargées.
+  // Filtrage en JS (pas en ilike Postgres) : ilike est insensible à la casse
+  // mais PAS aux accents ("ocean" ne matchait pas "Océane"). Le volume de
+  // devis reste petit (quelques centaines), donc filtrer côté Node après un
+  // fetch complet est largement assez rapide.
   if (req.query.search) {
-    const term = req.query.search.replace(/[,()]/g, '')
+    const termNorm = normalize(req.query.search)
+    if (!termNorm) return res.status(200).json({ results: [] })
     const sbRes = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/reservations?statut=eq.devis&or=(cliente_nom.ilike.*${encodeURIComponent(term)}*,cliente_email.ilike.*${encodeURIComponent(term)}*)&select=*&order=created_at.desc&limit=100`,
+      `${process.env.SUPABASE_URL}/rest/v1/reservations?statut=eq.devis&select=*&order=created_at.desc`,
       { headers: sbHeaders }
     )
     const data = await sbRes.json()
-    return res.status(200).json({ results: (Array.isArray(data) ? data : []).map(stripPhotos) })
+    const matches = (Array.isArray(data) ? data : []).filter(row =>
+      normalize(row.cliente_nom).includes(termNorm) || normalize(row.cliente_email).includes(termNorm)
+    ).slice(0, 100)
+    return res.status(200).json({ results: matches.map(stripPhotos) })
   }
 
   // Chargement paginé : les devis en attente (peu nombreux, ce sont ceux qui
