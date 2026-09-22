@@ -77,9 +77,10 @@ module.exports = async (req, res) => {
     console.log('[devis] envoi devis avec prix réel, doublon ignoré')
   }
 
+  let uploadedPhotos = []
   if (!isQuote) {
     // Upload des photos vers Supabase Storage avant insertion
-    const uploadedPhotos = await Promise.all(
+    uploadedPhotos = await Promise.all(
       (Array.isArray(photos) ? photos : []).map((p, i) => uploadPhotoToStorage(p, i))
     )
 
@@ -159,6 +160,14 @@ module.exports = async (req, res) => {
   ]
 
   if (!isQuote) {
+    const photosHtml = uploadedPhotos.length
+      ? `<div style="margin-top:16px">
+          <p style="margin:0 0 8px;font-weight:700;color:#7a5c00;font-size:13px">🖼 Photos jointes (${uploadedPhotos.length})</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${uploadedPhotos.map(src => `<a href="${src}"><img src="${src}" width="140" height="140" style="width:140px;height:140px;object-fit:cover;border-radius:8px;border:1px solid #eee" alt="photo devis"></a>`).join('')}
+          </div>
+        </div>`
+      : ''
     emailPromises.push(
       transport.sendMail({
         from: `"Honey Locks 🍯" <${process.env.GMAIL_USER}>`,
@@ -173,6 +182,7 @@ module.exports = async (req, res) => {
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prestation</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${service || '—'}</td></tr>
               ${message ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Message</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${message}</td></tr>` : ''}
             </table>
+            ${photosHtml}
             <p style="margin-top:16px;font-size:13px;color:#666">Connecte-toi à l'admin sur <a href="https://honeylocks.fr">honeylocks.fr</a> pour envoyer le devis.</p>
           </div>
         `
