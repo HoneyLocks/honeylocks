@@ -1,3 +1,4 @@
+const { requireAdmin, isAdmin } = require('./_auth')
 // Insensible casse + accents : "ocean" doit matcher "Océane".
 function normalize(str) {
   return (str || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
@@ -6,8 +7,9 @@ function normalize(str) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key')
   if (req.method === 'OPTIONS') return res.status(200).end()
+  if (!requireAdmin(req, res)) return
 
   if (req.method === 'DELETE') {
     const id = req.query && req.query.id

@@ -1,3 +1,4 @@
+const { requireAdmin, isAdmin } = require('./_auth')
 const nodemailer = require('nodemailer')
 
 function makeTransport() {
@@ -49,7 +50,7 @@ async function uploadPhotoToStorage(base64, index) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -58,6 +59,8 @@ module.exports = async (req, res) => {
   const email = emailRaw ? emailRaw.toLowerCase().trim() : emailRaw
   const prixStr = prix ? prix.toString().replace('€', '').trim() : null
   const isQuote = prixStr && prixStr.toLowerCase() !== 'sur devis' && !isNaN(parseFloat(prixStr))
+
+  if (isQuote && !requireAdmin(req, res)) return
 
   console.log('[devis] body reçu:', JSON.stringify({ nom, email, service, prix, prixStr, isQuote }))
 

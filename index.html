@@ -1207,7 +1207,25 @@ function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
-function openAdmin(){var p=prompt('Code d\'accès admin :');if(p!=='honey2024'){alert('Code incorrect.');return;}closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();loadAdminDevis();loadAdminBookings();fetch('/api/perso-events').then(function(r){return r.json();}).then(function(rows){S.persoEvents=Array.isArray(rows)?rows:[];renderCalAdmin();}).catch(function(){});}
+/* Mot de passe admin vérifié côté serveur (variable ADMIN_PASSWORD sur Vercel).
+   Une fois connecté, il est ajouté en en-tête x-admin-key à tous les appels /api/. */
+var _adminKey=null;
+try{_adminKey=sessionStorage.getItem('hl_admin_key');}catch(e){}
+(function(){var _f=window.fetch.bind(window);window.fetch=function(url,opts){
+  if(_adminKey&&typeof url==='string'&&url.indexOf('/api/')===0){opts=Object.assign({},opts);opts.headers=Object.assign({},opts.headers,{'x-admin-key':_adminKey});}
+  return _f(url,opts);
+};})();
+function openAdmin(){
+  if(_adminKey){_openAdminPanel();return;}
+  var p=prompt('Mot de passe admin :');if(!p)return;
+  _adminKey=p;
+  fetch('/api/perso-events').then(function(r){
+    if(r.status===401){_adminKey=null;alert('Mot de passe incorrect.');return;}
+    try{sessionStorage.setItem('hl_admin_key',p);}catch(e){}
+    _openAdminPanel();
+  }).catch(function(){_adminKey=null;alert('Erreur réseau.');});
+}
+function _openAdminPanel(){closeDrawer();document.getElementById('admin').classList.add('open');refreshAdmin();loadAdminDevis();loadAdminBookings();fetch('/api/perso-events').then(function(r){return r.json();}).then(function(rows){S.persoEvents=Array.isArray(rows)?rows:[];renderCalAdmin();}).catch(function(){});}
 function parseDevisRow(row){
   var email=(row.cliente_email||'').toLowerCase();
   var prixRaw=row.prix?row.prix.toString().replace('€','').trim():null;

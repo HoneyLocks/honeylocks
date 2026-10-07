@@ -1,4 +1,6 @@
+const { requireAdmin, isAdmin } = require('./_auth')
 module.exports = async (req, res) => {
+  if (!requireAdmin(req, res)) return
   res.setHeader('Access-Control-Allow-Origin', '*')
 
   const headers = {

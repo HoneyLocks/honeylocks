@@ -1,3 +1,4 @@
+const { requireAdmin, isAdmin } = require('./_auth')
 const nodemailer = require('nodemailer')
 
 function makeTransport() {
@@ -21,7 +22,7 @@ a{display:inline-block;margin-top:22px;background:#c9a84c;color:#161616;padding:
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
 
@@ -117,6 +118,7 @@ module.exports = async (req, res) => {
 
   // ── POST : annulation depuis l'admin ──
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (!requireAdmin(req, res)) return
 
   const { nom, email, service, slot, date_rdv, heure_rdv, booking_id } = req.body
   if (!email && !booking_id) return res.status(400).json({ error: 'email ou booking_id requis' })

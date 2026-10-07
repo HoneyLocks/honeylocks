@@ -1,7 +1,8 @@
+const { requireAdmin, isAdmin } = require('./_auth')
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key')
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   const headers = {
@@ -20,6 +21,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
+    if (!requireAdmin(req, res)) return
     const { date, slots } = req.body
     if (!date) return res.status(400).json({ error: 'date requis' })
     const r = await fetch(

@@ -1,3 +1,4 @@
+const { requireAdmin, isAdmin } = require('./_auth')
 const nodemailer = require('nodemailer')
 
 function makeTransport() {
@@ -10,10 +11,11 @@ function makeTransport() {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key')
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   if (req.method === 'PATCH') {
+    if (!requireAdmin(req, res)) return
     const { id, date_rdv, heure_rdv } = req.body
     if (!id || !date_rdv || !heure_rdv) return res.status(400).json({ error: 'id, date_rdv et heure_rdv requis' })
 
@@ -66,5 +68,8 @@ module.exports = async (req, res) => {
     }
   )
   const data = await sbRes.json()
-  res.status(200).json(Array.isArray(data) ? data : [])
+  const rows = Array.isArray(data) ? data : []
+  // Sans mot de passe admin : uniquement les créneaux occupés (aucune donnée cliente)
+  if (!isAdmin(req)) return res.status(200).json(rows.map(r => ({ date_rdv: r.date_rdv, heure_rdv: r.heure_rdv, service: r.service })))
+  res.status(200).json(rows)
 }
