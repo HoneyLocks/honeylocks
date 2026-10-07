@@ -678,6 +678,17 @@ textarea{resize:vertical;min-height:66px}
     <div class="brow"><button class="btn ghost" onclick="goSub('vslot',3)">Retour</button><button class="btn pp" onclick="openPayModal()">Payer l'acompte · PayPal 🤍</button></div>
   </div>
 
+  <!-- Modal RDV déjà existant (parcours "J'ai déjà mon devis") -->
+  <div class="dm-modal" id="exist-modal">
+    <div class="dm-modal-bg" onclick="existCancel()"></div>
+    <div class="dm-modal-box">
+      <div class="dm-modal-txt" id="exist-modal-txt"></div>
+      <button class="dm-modal-close" onclick="existContinue()">Oui, je veux un autre RDV</button>
+      <button class="btn pp" style="width:100%;margin-top:10px" onclick="existPay()">Payer mon acompte</button>
+      <button class="btn ghost" style="width:100%;margin-top:10px" onclick="existCancel()">Annuler</button>
+    </div>
+  </div>
+
   <!-- Modal confirmation paiement -->
   <div class="pay-modal-overlay" id="payModal">
     <div class="pay-modal">
@@ -1017,7 +1028,33 @@ function loginExisting(){
       res.innerHTML='<div class="note" style="border-left-color:var(--danger);margin-top:0"><strong>Erreur réseau.</strong> Réessaie dans un instant.</div>';
     });
 }
-function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var mc=document.getElementById('e-meches');S.sansCoif=sc?sc.checked:false;S.acompte=ACOMPTE_DEVIS;S.opts=[];if(mc&&mc.checked)S.opts.push({name:'Vanilles + mèches bouclées',price:20});S.price=base+(mc&&mc.checked?20:0)-(S.sansCoif?5:0);buildSlots().then(function(){goSub('vslot',3);});}
+function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var mc=document.getElementById('e-meches');S.sansCoif=sc?sc.checked:false;S.acompte=ACOMPTE_DEVIS;S.opts=[];if(mc&&mc.checked)S.opts.push({name:'Vanilles + mèches bouclées',price:20});S.price=base+(mc&&mc.checked?20:0)-(S.sansCoif?5:0);
+  /* Avant d'afficher les créneaux : RDV confirmé dans les 30 prochains jours pour cet email ? */
+  var em=document.getElementById('e-email').value.trim().toLowerCase();
+  S.existingBk=null;
+  fetch('/api/client?upcoming=1&email='+encodeURIComponent(em),{cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var bk=d&&Array.isArray(d.bookings)?d.bookings[0]:null;
+      if(!bk){showSlotsAfterDevis();return;}
+      S.existingBk=bk;
+      document.getElementById('exist-modal-txt').innerHTML='⚠️ Tu as déjà un rendez-vous le <strong>'+_longDate(bk.date_rdv)+'</strong> à <strong>'+escHtml(bk.heure_rdv||'')+'</strong>. As-tu eu un problème avec le paiement de l\'acompte ?';
+      document.getElementById('exist-modal').classList.add('open');
+    })
+    .catch(showSlotsAfterDevis);
+}
+function showSlotsAfterDevis(){buildSlots().then(function(){goSub('vslot',3);});}
+function _longDate(iso){if(!iso)return'';var p=iso.split('-');var d=new Date(+p[0],p[1]-1,+p[2]);var j=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'][d.getDay()];var m=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][d.getMonth()];return j+' '+d.getDate()+' '+m;}
+function closeExistModal(){document.getElementById('exist-modal').classList.remove('open');}
+function existContinue(){closeExistModal();showSlotsAfterDevis();}
+function existCancel(){closeExistModal();}
+function existPay(){
+  var bk=S.existingBk;if(!bk)return;
+  var ppName=S.quotedName||'Cliente';
+  var ppNote=encodeURIComponent('Acompte @'+ppName+' – '+_slotLabel(bk.date_rdv,bk.heure_rdv));
+  try{window.open(PAYPAL+'/'+bk.acompte+'?locale.x=fr_FR&note='+ppNote,'_blank');}catch(e){}
+  closeExistModal();
+}
 function simQuote(){S.price=65;buildSlots().then(function(){goSub('vslot',3);});}
 
 function isoFmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -1135,12 +1172,11 @@ function pay(){
   var ppNote=encodeURIComponent('Acompte @'+ppName+' – '+(S.slot||'RDV'));
   var ppUrl=PAYPAL+'/'+S.acompte+'?locale.x=fr_FR&note='+ppNote;
   try{window.open(ppUrl,'_blank');}catch(e){}
-  S.rdv++;S.ac+=S.acompte;
+  S.ac+=S.acompte;
   var bkEmail=S.clientEmail||document.getElementById('e-email').value.trim().toLowerCase();
   var bkNom=S.clientInsta||S.quotedName||'Cliente';
   var _optsStr=S.opts.map(function(o){return o.name+(o.price?' ('+(o.price>=0?'+':'')+o.price+'€)':'');}).join(' · ');
   var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
-  S.bookings.push({id:Date.now(),service:_fullSvc,slot:S.slot,slotIso:S.slotIso,price:S.price,acompte:S.acompte,status:'confirmed',insta:bkNom,email:bkEmail,acomptePaye:false,curPhotos:S.curPhotos.slice(),inspoPhotos:S.inspoPhotos.slice()});
   if(S.slotIso&&S.slots[S.slotIso]){var _hr=S.slot?S.slot.split(' à ')[1]||'':'';S.slots[S.slotIso].forEach(function(s){if(s.time===_hr)s.on=false;});}
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé.<br>Vérifie que ton acompte a bien été envoyé sur PayPal — sans paiement reçu, le créneau ne sera pas confirmé 🍯';
   refreshAdmin();goSub('vdone',4);
@@ -1224,25 +1260,29 @@ function onDevisSearchInput(){
   },300);
 }
 function loadAdminBookings(){
-  fetch('/api/admin-bookings').then(function(r){return r.json();}).then(function(rows){
-    S.bookings=[];
+  /* Source UNIQUE : Supabase via /api/admin-bookings (aucune fusion avec le localStorage).
+     Plusieurs RDV avec le même email sont conservés : on ne dédoublonne que par id de ligne. */
+  fetch('/api/admin-bookings',{cache:'no-store'}).then(function(r){return r.json();}).then(function(rows){
+    if(!Array.isArray(rows))return;
+    var list=[],seen={};
     rows.forEach(function(row){
-      if(row.statut==='annulé')return;
-      var localMatch=S.bookings.filter(function(b){return b.email&&b.email.toLowerCase()===(row.cliente_email||'').toLowerCase()&&b.slotIso===row.date_rdv;})[0];
-      if(localMatch){localMatch.id=row.id;return;}
+      if(!row||row.statut==='annulé'||seen[row.id])return;
+      seen[row.id]=true;
       var prixNum=parseFloat((row.prix||'0').toString().replace('€','').trim())||0;
-      var ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;
-      var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}');}catch(e){}
-      S.bookings.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
+      var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}')||{};}catch(e){}
+      var ac=parseFloat(bkNotes.acompte);
+      if(!(ac>0))ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;
+      list.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
     });
+    S.bookings=list;
     S.rdv=S.bookings.length;
     refreshAdmin();
   }).catch(function(){});
 }
 function closeAdmin(){document.getElementById('admin').classList.remove('open')}
-function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active')}
+function atab(name,el){document.querySelectorAll('.atab').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.querySelectorAll('.apanel').forEach(function(p){p.classList.remove('active')});document.getElementById('ap-'+name).classList.add('active');if(name==='bookings')loadAdminBookings();}
 function refreshAdmin(){
-  saveReqs();saveBookings();
+  saveReqs();
   var p=S.reqs.filter(function(r){return r.status==='pending'}).length;
   document.getElementById('st-p').textContent=p;document.getElementById('st-r').textContent=S.rdv;document.getElementById('st-c').textContent=S.ac+'€';
   var h='';
@@ -1481,16 +1521,15 @@ function loadDevisPhotos(id){
 function delBk(id){
   if(!confirm('Annuler ce rendez-vous ?'))return;
   var bk=S.bookings.filter(function(x){return x.id===id})[0];
+  if(!bk)return;
   S.bookings=S.bookings.filter(function(x){return x.id!==id});
-  S.rdv=Math.max(0,S.rdv-1);
+  S.rdv=S.bookings.length;
   refreshAdmin();
-  if(bk&&bk.email){
-    fetch('/api/annulation',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({nom:bk.insta||'Cliente',email:bk.email,service:bk.service,slot:bk.slot,date_rdv:bk.slotIso,booking_id:bk.id})
-    }).catch(function(){});
-  }
+  fetch('/api/annulation',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nom:bk.insta||'Cliente',email:bk.email||'',service:bk.service,slot:bk.slot,date_rdv:bk.slotIso,heure_rdv:bk.heureIso,booking_id:bk.id})
+  }).then(loadAdminBookings,loadAdminBookings);
 }
 function sendRappel(id){
   var bk=S.bookings.filter(function(x){return x.id===id})[0];
@@ -1589,10 +1628,8 @@ function submitCreateRdv(){
     else alert('Erreur lors de la création.');
   }).catch(function(){btn.disabled=false;btn.textContent='Créer le RDV';alert('Erreur réseau.');});
 }
-/* Persistence S.bookings via localStorage */
-function saveBookings(){
-  try{localStorage.setItem('hl_bookings',JSON.stringify(S.bookings.map(function(b){var c=Object.assign({},b);delete c.curPhotos;delete c.inspoPhotos;return c;})));}catch(e){}
-}
+/* Les réservations ne sont plus stockées en localStorage : purge de l'ancienne clé */
+try{localStorage.removeItem('hl_bookings');}catch(e){}
 /* Persistence S.slots via localStorage */
 function saveSlots(){
   try{localStorage.setItem('hl_slots',JSON.stringify(S.slots));}catch(e){}
