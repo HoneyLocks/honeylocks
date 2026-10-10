@@ -888,6 +888,33 @@ function pickFB(el){
   S.optTotal=S.opts.reduce(function(sum,o){return sum+o.price;},0);
   document.getElementById('bopt').disabled=!(S.fulaniFront&&S.fulaniBack);
 }
+/* Libellé clair d'un départ de locks : technique, longueur, taille, options, coiffure — chacun une seule fois.
+   Sert aussi à nettoyer les anciennes réservations (ex. "… · Twist · Twist · Medium · Taille Medium (+5€)"). */
+function formatService(svc){
+  svc=(svc||'').toString();
+  if(svc.indexOf('Départ de locks')!==0)return svc;
+  var tech=null,len=null,size=null,coif=false,others=[];
+  svc.split(' · ').forEach(function(raw){
+    var p=raw.trim(),pl=p.toLowerCase();
+    if(!p||pl==='départ de locks')return;
+    if(/cheveux courts/.test(pl))len='Courts';
+    else if(/extra longs?/.test(pl))len='Extra longs';
+    else if(/moyens?\/longs?/.test(pl))len='Moyens/Longs';
+    if(/(^|en )twists?$/.test(pl)||pl==='twist')tech='Twist';
+    else if(/(^|en )vanilles?$/.test(pl))tech='Vanilles';
+    else if(/^(taille )?(medium|large)\b/.test(pl))size=/medium/.test(pl)?'Medium':'Large';
+    else if(/^sans coiffure protectrice/.test(pl)){}
+    else if(/^coiffure protectrice/.test(pl))coif=true;
+    else if(!/^départ de locks|^cheveux /.test(pl)&&others.indexOf(p)===-1)others.push(p);
+  });
+  var out=['Départ de locks'];
+  if(tech)out.push(tech);
+  if(len)out.push(len);
+  if(size)out.push('Taille '+size);
+  out=out.concat(others);
+  out.push(coif?'+ Coiffure protectrice':'Sans coiffure protectrice');
+  return out.join(' · ');
+}
 function fromOpt(){
   S.price=S.base+S.optTotal;
   if(S.type==='fulani'&&(S.fulaniFront||S.fulaniBack)){
@@ -895,9 +922,6 @@ function fromOpt(){
     if(S.fulaniFront)parts.push(S.fulaniFront+' devant');
     if(S.fulaniBack)parts.push(S.fulaniBack+' derrière');
     S.name='Fulani · '+parts.join(' / ');
-  }
-  if(S.type==='size'&&S.technique){
-    S.name=S.name+' · '+S.technique;
   }
   buildSlots().then(function(){goSub('vslot',3);});
 }
@@ -1030,27 +1054,32 @@ function loginExisting(){
 }
 function bookAfterDevis(base){var sc=document.getElementById('e-sans-coif');var mc=document.getElementById('e-meches');S.sansCoif=sc?sc.checked:false;S.acompte=ACOMPTE_DEVIS;S.opts=[];if(mc&&mc.checked)S.opts.push({name:'Vanilles + mèches bouclées',price:20});S.price=base+(mc&&mc.checked?20:0)-(S.sansCoif?5:0);
   /* Avant d'afficher les créneaux : RDV confirmé dans les 30 prochains jours pour cet email ? */
-  var em=document.getElementById('e-email').value.trim().toLowerCase();
-  S.existingBk=null;
+  checkExistingBooking(document.getElementById('e-email').value.trim().toLowerCase(),showSlotsAfterDevis);
+}
+/* Toutes prestations : si l'email a déjà un RDV confirmé dans les 30 jours, popup d'avertissement,
+   sinon on continue directement le parcours (onContinue). */
+function checkExistingBooking(em,onContinue){
+  S.existingBk=null;S.existContinue=onContinue;
+  if(!em){onContinue();return;}
   fetch('/api/client?upcoming=1&email='+encodeURIComponent(em),{cache:'no-store'})
     .then(function(r){return r.json();})
     .then(function(d){
       var bk=d&&Array.isArray(d.bookings)?d.bookings[0]:null;
-      if(!bk){showSlotsAfterDevis();return;}
+      if(!bk){onContinue();return;}
       S.existingBk=bk;
       document.getElementById('exist-modal-txt').innerHTML='⚠️ Tu as déjà un rendez-vous le <strong>'+_longDate(bk.date_rdv)+'</strong> à <strong>'+escHtml(bk.heure_rdv||'')+'</strong>. As-tu eu un problème avec le paiement de l\'acompte ?';
       document.getElementById('exist-modal').classList.add('open');
     })
-    .catch(showSlotsAfterDevis);
+    .catch(function(){onContinue();});
 }
 function showSlotsAfterDevis(){buildSlots().then(function(){goSub('vslot',3);});}
 function _longDate(iso){if(!iso)return'';var p=iso.split('-');var d=new Date(+p[0],p[1]-1,+p[2]);var j=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'][d.getDay()];var m=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][d.getMonth()];return j+' '+d.getDate()+' '+m;}
 function closeExistModal(){document.getElementById('exist-modal').classList.remove('open');}
-function existContinue(){closeExistModal();showSlotsAfterDevis();}
+function existContinue(){closeExistModal();if(S.existContinue)S.existContinue();}
 function existCancel(){closeExistModal();}
 function existPay(){
   var bk=S.existingBk;if(!bk)return;
-  var ppName=S.quotedName||'Cliente';
+  var ppName=S.clientInsta||S.quotedName||'Cliente';
   var ppNote=encodeURIComponent('Acompte @'+ppName+' – '+_slotLabel(bk.date_rdv,bk.heure_rdv));
   try{window.open(PAYPAL+'/'+bk.acompte+'?locale.x=fr_FR&note='+ppNote,'_blank');}catch(e){}
   closeExistModal();
@@ -1149,11 +1178,12 @@ function fromClient(){
   }
   S.clientInsta=insta;
   S.clientEmail=document.getElementById('c-email').value.trim().toLowerCase();
-  _buildRecap();
+  checkExistingBooking(S.clientEmail,_buildRecap);
 }
 function _buildRecap(){
-  var h='<div class="rrow"><span>Prestation</span><span class="v">'+S.name+'</span></div>';
-  if(S.size)h+='<div class="rrow"><span>Taille</span><span class="v">'+S.size+'</span></div>';
+  var h='<div class="rrow"><span>Prestation</span><span class="v">'+(S.type==='size'?formatService(S.name).replace(/ · Sans coiffure protectrice$/,''):S.name)+'</span></div>';
+  if(S.technique)h+='<div class="rrow"><span>Technique</span><span class="v">'+S.technique+'</span></div>';
+  if(S.size&&!S.opts.some(function(o){return o.key==='size';}))h+='<div class="rrow"><span>Taille</span><span class="v">'+S.size+'</span></div>';
   S.opts.forEach(function(o){h+='<div class="rrow"><span>+ '+o.name+'</span><span class="v">'+(o.price>=0?'+':'')+o.price+'€</span></div>'});
   if(S.sansCoif)h+='<div class="rrow"><span>Sans coiffure protectrice</span><span class="v">−5€</span></div>';
   h+='<div class="rrow"><span>Créneau</span><span class="v">'+S.slot+'</span></div>';
@@ -1176,7 +1206,15 @@ function pay(){
   var bkEmail=S.clientEmail||document.getElementById('e-email').value.trim().toLowerCase();
   var bkNom=S.clientInsta||S.quotedName||'Cliente';
   var _optsStr=S.opts.map(function(o){return o.name+(o.price?' ('+(o.price>=0?'+':'')+o.price+'€)':'');}).join(' · ');
-  var _fullSvc=S.name+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
+  var _fullSvc=S.name+(S.technique?' · '+S.technique:'')+(S.size?' · '+S.size:'');if(_optsStr)_fullSvc+=' · '+_optsStr;if(S.sansCoif)_fullSvc+=' · Sans coiffure protectrice';
+  var _baseSvc=S.name,_baseSize=S.size||null,_optsData=S.opts;
+  if(S.type==='size'){
+    _fullSvc=formatService(_fullSvc);
+    _baseSvc=formatService(S.name+' · '+(S.technique||'')).replace(/ · (\+ Coiffure protectrice|Sans coiffure protectrice)$/,'');
+    _baseSize=null;
+    _optsData=S.opts.slice();
+    if(!S.opts.some(function(o){return o.key==='coif-prot';}))_optsData.push({name:'Sans coiffure protectrice',price:0});
+  }
   if(S.slotIso&&S.slots[S.slotIso]){var _hr=S.slot?S.slot.split(' à ')[1]||'':'';S.slots[S.slotIso].forEach(function(s){if(s.time===_hr)s.on=false;});}
   document.getElementById('done-txt').innerHTML='Ton créneau <strong style="color:var(--honey-light)">'+S.slot+'</strong> est réservé.<br>Vérifie que ton acompte a bien été envoyé sur PayPal — sans paiement reçu, le créneau ne sera pas confirmé 🍯';
   refreshAdmin();goSub('vdone',4);
@@ -1195,9 +1233,9 @@ function pay(){
       heure_rdv:heureRdv,
       prix:S.price+'€',
       acompte:S.acompte+'€',
-      baseService:S.name,
-      baseSize:S.size||null,
-      optsData:S.opts,
+      baseService:_baseSvc,
+      baseSize:_baseSize,
+      optsData:_optsData,
       curPhotos:S.curPhotos.slice(),
       inspoPhotos:S.inspoPhotos.slice()
     })
@@ -1290,7 +1328,7 @@ function loadAdminBookings(){
       var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}')||{};}catch(e){}
       var ac=parseFloat(bkNotes.acompte);
       if(!(ac>0))ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;
-      list.push({id:row.id,service:row.service||'',slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
+      list.push({id:row.id,service:formatService(row.service),slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
     });
     S.bookings=list;
     S.rdv=S.bookings.length;
