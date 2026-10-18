@@ -1100,14 +1100,23 @@ function buildSlots(){
   var isoToday=isoFmt(today);
   var isoTomorrow=isoFmt(new Date(today.getFullYear(),today.getMonth(),today.getDate()+1));
   var after20=now.getHours()>=20;
-  function _render(blockedDates,configs){
-    blockedDates=blockedDates||{};
+  function _render(blockedDates,configs,booked){
+    blockedDates=blockedDates||{};booked=booked||{};
     var h='';
     var dates=(configs||[]).map(function(c){return c.date;}).filter(function(iso){return iso&&iso>=isoToday;}).sort();
     dates.forEach(function(iso){
       var p=iso.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
       var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
       var avail=blockedDates[iso]?[]:(S.slots[iso]||[]).filter(function(s){return s.on;});
+      /* Départ de locks : un créneau n'est proposé que si le créneau suivant de la journée est libre
+         (aucune réservation, toutes prestations confondues). Le dernier créneau de la journée reste proposé. */
+      if(_isDepart&&avail.length){
+        var _times=(S.slots[iso]||[]).map(function(s){return s.time;}).filter(function(t){return _toMin(t)!==null;}).sort(function(a,b){return _toMin(a)-_toMin(b);});
+        avail=avail.filter(function(s){
+          var nxt=_times.filter(function(t){return _toMin(t)>_toMin(s.time);})[0];
+          return !nxt||!(booked[iso]&&booked[iso][_toMin(nxt)]);
+        });
+      }
       var isDm=(iso===isoToday)||(iso===isoTomorrow&&after20);
       if(avail.length){
         h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
@@ -1127,24 +1136,31 @@ function buildSlots(){
     var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=(S.name||'')+extra+(S.price?' · '+S.price+'€':'');
   }
   var _isLongSvc=(S.type==='devis');
+  var _isDepart=(S.type==='size');
   return Promise.all([
     fetch('/api/slots').then(function(r){return r.json();}).catch(function(){return[];}),
     fetch('/api/admin-bookings').then(function(r){return r.json();}).catch(function(){return[];})
   ]).then(function(results){
     var configs=results[0]||[];var bks=results[1]||[];
     configs.forEach(function(c){if(c.date&&Array.isArray(c.slots))S.slots[c.date]=c.slots;});
-    var blockedDates={};
+    var blockedDates={},booked={};
     bks.forEach(function(bk){
       var iso=bk.date_rdv,heure=bk.heure_rdv;
-      if(iso&&heure&&S.slots[iso])S.slots[iso].forEach(function(s){if(s.time===heure)s.on=false;});
+      /* créneaux occupés : le RDV lui-même + le créneau suivant bloqué par un départ de locks */
+      [heure,bk.bloque_suivant].forEach(function(t){
+        if(!iso||!t)return;
+        (booked[iso]=booked[iso]||{})[_toMin(t)]=true;
+        if(S.slots[iso])S.slots[iso].forEach(function(s){if(_toMin(s.time)===_toMin(t))s.on=false;});
+      });
       if(!_isLongSvc){
         var svc=bk.service||'';
         if(svc.indexOf('Retwist')===-1&&svc.indexOf('Démêlage')===-1&&iso)blockedDates[iso]=true;
       }
     });
-    _render(blockedDates,configs);
+    _render(blockedDates,configs,booked);
   });
 }
+function _toMin(t){var m=/^(\d{1,2}):(\d{2})/.exec(t||'');return m?parseInt(m[1],10)*60+parseInt(m[2],10):null;}
 function backFromSlot(){if(S.type==='devis')goSub('vcheck',2);else goSub('vopt',2);}
 var DM_MSGS={
   today:'Pour une réservation aujourd\'hui, contacte-moi en DM sur Instagram <strong>@honeylocks__</strong> 🍯',

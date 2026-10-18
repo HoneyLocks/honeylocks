@@ -1,4 +1,5 @@
 const { requireAdmin, isAdmin } = require('./_auth')
+const { nextSlot, nextFromTimes, isDepart } = require('./_slots')
 const nodemailer = require('nodemailer')
 
 function makeTransport() {
@@ -36,6 +37,18 @@ module.exports = async (req, res) => {
     const row = Array.isArray(sbData) ? sbData[0] : null
     if (!row) return res.status(500).json({ error: 'Réservation introuvable ou non mise à jour' })
 
+    // Départ de locks décalé : le créneau bloqué en plus suit le nouveau RDV
+    if (isDepart(row.service)) {
+      let notes = {}
+      try { notes = JSON.parse(row.notes || '{}') || {} } catch (e) {}
+      notes.bloque_suivant = await nextSlot(date_rdv, heure_rdv)
+      await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` },
+        body: JSON.stringify({ notes: JSON.stringify(notes) })
+      }).catch(e => console.error('[admin-bookings] maj bloque_suivant:', e.message))
+    }
+
     if (row.cliente_email) {
       const transport = makeTransport()
       await transport.sendMail({
@@ -69,7 +82,28 @@ module.exports = async (req, res) => {
   )
   const data = await sbRes.json()
   const rows = Array.isArray(data) ? data : []
+
+  // Départ de locks : créneau suivant bloqué (enregistré dans notes ; recalculé pour les anciennes réservations)
+  let configs = null
+  for (const r of rows) {
+    if (!isDepart(r.service)) continue
+    let notes = {}
+    try { notes = JSON.parse(r.notes || '{}') || {} } catch (e) {}
+    if (notes.bloque_suivant !== undefined) { r.bloque_suivant = notes.bloque_suivant; continue }
+    if (!configs) {
+      configs = {}
+      try {
+        const c = await fetch(`${process.env.SUPABASE_URL}/rest/v1/slots_config?select=date,slots`, {
+          headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` }
+        })
+        const cj = await c.json()
+        if (Array.isArray(cj)) cj.forEach(x => { if (Array.isArray(x.slots)) configs[x.date] = x.slots.map(s => s.time) })
+      } catch (e) { console.error('[admin-bookings] lecture slots_config:', e.message) }
+    }
+    r.bloque_suivant = nextFromTimes(configs[r.date_rdv], r.heure_rdv)
+  }
+
   // Sans mot de passe admin : uniquement les créneaux occupés (aucune donnée cliente)
-  if (!isAdmin(req)) return res.status(200).json(rows.map(r => ({ date_rdv: r.date_rdv, heure_rdv: r.heure_rdv, service: r.service })))
+  if (!isAdmin(req)) return res.status(200).json(rows.map(r => ({ date_rdv: r.date_rdv, heure_rdv: r.heure_rdv, service: r.service, bloque_suivant: r.bloque_suivant || null })))
   res.status(200).json(rows)
 }
