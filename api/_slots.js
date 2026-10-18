@@ -6,7 +6,8 @@ const toMin = t => {
   return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null
 }
 
-const isDepart = service => (service || '').indexOf('Départ de locks') === 0
+// Prestations longues qui bloquent aussi le créneau suivant : départs de locks et vanilles
+const blocksNext = service => /^(Départ de locks|Vanilles)/.test((service || '').trim())
 
 // Créneau qui suit `heure` dans la liste `times`, ou null si c'est le dernier de la journée
 function nextFromTimes(times, heure) {
@@ -33,4 +34,4 @@ async function nextSlot(date, heure) {
   return nextFromTimes(times, heure)
 }
 
-module.exports = { nextSlot, nextFromTimes, isDepart, toMin, DEFAULT_TIMES }
+module.exports = { nextSlot, nextFromTimes, blocksNext, toMin, DEFAULT_TIMES }

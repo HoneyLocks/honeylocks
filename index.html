@@ -1108,9 +1108,9 @@ function buildSlots(){
       var p=iso.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
       var label=joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()];
       var avail=blockedDates[iso]?[]:(S.slots[iso]||[]).filter(function(s){return s.on;});
-      /* Départ de locks : un créneau n'est proposé que si le créneau suivant de la journée est libre
+      /* Départ de locks et vanilles : un créneau n'est proposé que si le créneau suivant de la journée est libre
          (aucune réservation, toutes prestations confondues). Le dernier créneau de la journée reste proposé. */
-      if(_isDepart&&avail.length){
+      if(_needsNext&&avail.length){
         var _times=(S.slots[iso]||[]).map(function(s){return s.time;}).filter(function(t){return _toMin(t)!==null;}).sort(function(a,b){return _toMin(a)-_toMin(b);});
         avail=avail.filter(function(s){
           var nxt=_times.filter(function(t){return _toMin(t)>_toMin(s.time);})[0];
@@ -1136,7 +1136,7 @@ function buildSlots(){
     var extra=S.size?(' · '+S.size):'';document.getElementById('slot-sub').textContent=(S.name||'')+extra+(S.price?' · '+S.price+'€':'');
   }
   var _isLongSvc=(S.type==='devis');
-  var _isDepart=(S.type==='size');
+  var _needsNext=(S.type==='size'||S.type==='vanille-taille');
   return Promise.all([
     fetch('/api/slots').then(function(r){return r.json();}).catch(function(){return[];}),
     fetch('/api/admin-bookings').then(function(r){return r.json();}).catch(function(){return[];})
@@ -1146,7 +1146,7 @@ function buildSlots(){
     var blockedDates={},booked={};
     bks.forEach(function(bk){
       var iso=bk.date_rdv,heure=bk.heure_rdv;
-      /* créneaux occupés : le RDV lui-même + le créneau suivant bloqué par un départ de locks */
+      /* créneaux occupés : le RDV lui-même + le créneau suivant bloqué par un départ de locks ou des vanilles */
       [heure,bk.bloque_suivant].forEach(function(t){
         if(!iso||!t)return;
         (booked[iso]=booked[iso]||{})[_toMin(t)]=true;

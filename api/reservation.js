@@ -1,4 +1,4 @@
-const { nextSlot, isDepart } = require('./_slots')
+const { nextSlot, blocksNext } = require('./_slots')
 const nodemailer = require('nodemailer')
 
 function generateToken() {
@@ -101,8 +101,8 @@ module.exports = async (req, res) => {
   const acompteNum = parseFloat(acompte) || 0
   const resteNum = Math.max(0, prixNum - acompteNum)
 
-  // Départ de locks : le créneau suivant de la journée est bloqué aussi
-  const bloqueSuivant = isDepart(service) ? await nextSlot(date_rdv, heure_rdv) : null
+  // Départ de locks / vanilles : le créneau suivant de la journée est bloqué aussi
+  const bloqueSuivant = blocksNext(service) ? await nextSlot(date_rdv, heure_rdv) : null
 
   // Sauvegarder dans Supabase via REST
   const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {

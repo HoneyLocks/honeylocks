@@ -1,5 +1,5 @@
 const { requireAdmin, isAdmin } = require('./_auth')
-const { nextSlot, nextFromTimes, isDepart } = require('./_slots')
+const { nextSlot, nextFromTimes, blocksNext } = require('./_slots')
 const nodemailer = require('nodemailer')
 
 function makeTransport() {
@@ -37,8 +37,8 @@ module.exports = async (req, res) => {
     const row = Array.isArray(sbData) ? sbData[0] : null
     if (!row) return res.status(500).json({ error: 'Réservation introuvable ou non mise à jour' })
 
-    // Départ de locks décalé : le créneau bloqué en plus suit le nouveau RDV
-    if (isDepart(row.service)) {
+    // Départ de locks / vanilles décalé : le créneau bloqué en plus suit le nouveau RDV
+    if (blocksNext(row.service)) {
       let notes = {}
       try { notes = JSON.parse(row.notes || '{}') || {} } catch (e) {}
       notes.bloque_suivant = await nextSlot(date_rdv, heure_rdv)
@@ -83,10 +83,10 @@ module.exports = async (req, res) => {
   const data = await sbRes.json()
   const rows = Array.isArray(data) ? data : []
 
-  // Départ de locks : créneau suivant bloqué (enregistré dans notes ; recalculé pour les anciennes réservations)
+  // Départ de locks / vanilles : créneau suivant bloqué (enregistré dans notes ; recalculé pour les anciennes réservations)
   let configs = null
   for (const r of rows) {
-    if (!isDepart(r.service)) continue
+    if (!blocksNext(r.service)) continue
     let notes = {}
     try { notes = JSON.parse(r.notes || '{}') || {} } catch (e) {}
     if (notes.bloque_suivant !== undefined) { r.bloque_suivant = notes.bloque_suivant; continue }
