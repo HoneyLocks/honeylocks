@@ -109,7 +109,7 @@ module.exports = async (req, res) => {
   const prixStr = (prix || prix_base !== undefined) ? String(prixNum) : null
   const acompteNum = parseFloat(acompte) || 0
   const resteNum = Math.max(0, prixNum - acompteNum)
-  const majRow = majoration > 0 ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Majoration créneau</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>+${majoration}€</strong></td></tr>` : ''
+  const majRow = majoration > 0 ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${baseNum}€</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Majoration créneau</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>+${majoration}€</strong></td></tr>` : ''
 
   // Départ de locks / vanilles : le créneau suivant de la journée est bloqué aussi
   const bloqueSuivant = blocksNext(service) ? await nextSlot(date_rdv, heure_rdv, slotsDuJour) : null

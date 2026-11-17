@@ -101,7 +101,7 @@ module.exports = async (req, res) => {
               ${buildServiceRows(rdv.service || '—', rdvBaseService, rdvBaseSize, rdvOpts)}
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${rdv.date_rdv || '—'}</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${rdv.heure_rdv || '—'}</td></tr>
-              ${rdvMaj ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Majoration créneau</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>+${rdvMaj}€</strong></td></tr>` : ''}
+              ${rdvMaj ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${rdvPrix - rdvMaj}€</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Majoration créneau</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>+${rdvMaj}€</strong></td></tr>` : ''}
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>${rdvPrix}€</strong></td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte payé</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${rdvAcompte}€</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;font-size:17px"><strong>${rdvReste}€</strong></td></tr>

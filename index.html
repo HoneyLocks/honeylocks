@@ -1220,7 +1220,7 @@ function _buildRecap(){
   h+='<div class="rrow"><span>Créneau</span><span class="v">'+S.slot+'</span></div>';
   if(S.clientInsta)h+='<div class="rrow"><span>Instagram</span><span class="v">@'+S.clientInsta+'</span></div>';
   var _maj=S.maj||0,_tot=S.price+_maj;
-  if(_maj)h+='<div class="rrow"><span>Majoration créneau</span><span class="v">+'+_maj+'€</span></div>';
+  if(_maj){h+='<div class="rrow"><span>Prix</span><span class="v">'+S.price+'€</span></div>';h+='<div class="rrow"><span>Majoration créneau</span><span class="v">+'+_maj+'€</span></div>';}
   h+='<div class="rrow"><span>Prix total</span><span class="v">'+_tot+'€</span></div>';
   h+='<div class="rrow"><span>Acompte PayPal</span><span class="rtotal">'+S.acompte+'€</span></div>';
   h+='<div class="rrow"><span>Reste le jour J</span><span class="v">'+(_tot-S.acompte)+'€</span></div>';
@@ -1400,7 +1400,7 @@ function refreshAdmin(){
   var _futureBks=S.bookings.slice().filter(function(bk){return!bk.slotIso||bk.slotIso>=_bkTodayIso;}).sort(function(a,b2){if(a.slotIso!==b2.slotIso)return(a.slotIso||'').localeCompare(b2.slotIso||'');return((a.slot||'').split(' à ')[1]||'').localeCompare(((b2.slot||'').split(' à ')[1])||'');});
   _futureBks.forEach(function(bk){
     var bkReste=Math.max(0,bk.price-bk.acompte);
-    var bkMeta=bk.slot+' · '+bk.price+'€ total'+(bk.maj?' (dont majoration +'+bk.maj+'€)':'')+' · acompte '+bk.acompte+'€ · reste '+bkReste+'€';
+    var bkMeta=bk.slot+' · '+(bk.maj?(bk.price-bk.maj)+'€ + majoration '+bk.maj+'€ = ':'')+bk.price+'€ total · acompte '+bk.acompte+'€ · reste '+bkReste+'€';
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
