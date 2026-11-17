@@ -80,7 +80,7 @@ body{font-family:'DM Sans',sans-serif;font-weight:300;background:var(--dark);col
   h1{font-size:3.2rem}
   h2{font-size:2.2rem}
   /* hero desktop - logo grand centré */
-  .hero{display:flex;text-align:center;padding:56px 48px 40px;flex-direction:column;align-items:center;gap:0}
+  .hero{display:flex;text-align:center;margin-top:-80px;padding:136px 48px 40px;flex-direction:column;align-items:center;gap:0}
   .hero img{display:block;height:260px;margin:0 auto 20px;order:-1}
   .hero-left{flex:none;width:100%;text-align:center}
   .hero-tag{font-size:.75rem}
@@ -131,7 +131,7 @@ h2{font-family:'Bebas Neue';font-size:1.9rem;letter-spacing:1.5px;color:var(--ho
 p.body{font-size:14px;color:rgba(245,233,200,.8);margin-bottom:14px;line-height:1.7}
 
 /* HERO (home) */
-.hero{text-align:center;padding:34px 12px 26px;background:radial-gradient(ellipse at top,rgba(201,168,76,.16),transparent 72%)}
+.hero{text-align:center;margin-top:-63px;padding:97px 12px 26px;background:radial-gradient(ellipse at top,rgba(201,168,76,.16),transparent 72%)}
 .hero img{display:block;height:120px;margin:0 auto 14px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35))}
 .hero-tag{display:inline-block;border:1px solid var(--border);padding:6px 15px;border-radius:99px;color:var(--honey);text-transform:uppercase;letter-spacing:2.5px;font-size:.62rem;margin-bottom:8px}
 .hero-sub{color:var(--dim);text-transform:uppercase;letter-spacing:2px;font-size:.78rem;margin:10px 0 26px}
@@ -1344,7 +1344,7 @@ function loadAdminBookings(){
       var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}')||{};}catch(e){}
       var ac=parseFloat(bkNotes.acompte);
       if(!(ac>0))ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;
-      list.push({id:row.id,service:formatService(row.service),slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
+      list.push({id:row.id,service:formatService(row.service),slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',nbLocks:row.nb_locks||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
     });
     S.bookings=list;
     S.rdv=S.bookings.length;
@@ -1386,7 +1386,8 @@ function refreshAdmin(){
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
     var _reqBk=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
-    if(_reqBk&&_reqBk.count&&_reqBk.count!=='?')bkExtra+='<div class="rqd">🔢 '+_reqBk.count+' locks</div>';
+    var _bkCnt=bk.nbLocks||(_reqBk&&_reqBk.count&&_reqBk.count!=='?'?_reqBk.count:'');
+    bkExtra+='<div class="rqd">🔢 '+(_bkCnt?_bkCnt+' locks':'Nombre de locks : non renseigné')+'</div>';
     if(bk.curPhotos&&bk.curPhotos.length){bkExtra+='<div class="rqd">🔒 Photos locks ('+bk.curPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.curPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     if(bk.inspoPhotos&&bk.inspoPhotos.length){bkExtra+='<div class="rqd">💫 Photos inspiration ('+bk.inspoPhotos.length+')</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'+bk.inspoPhotos.map(function(src){return'<img src="'+src+'" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">';}).join('')+'</div>';}
     b+='<div class="bk"><h4>'+bk.service+'</h4><div class="meta">'+bkMeta+'</div>'+bkExtra+'<div class="bk-actions"><button class="bk-ok'+(bk.acomptePaye?' paid':'')+'" onclick="markAcompte(\''+bk.id+'\','+(!bk.acomptePaye)+')">'+(bk.acomptePaye?'✅ Acompte reçu':'⏳ Acompte reçu')+'</button>';
@@ -1475,7 +1476,7 @@ function renderCalAdmin(){
         if(item.kind==='bk'){
           var bk=item.data;
           var _calReq=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
-          h+='<div class="cal-bk"><span class="cal-time">'+item.time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(_calReq&&_calReq.count&&_calReq.count!=='?'?'<span class="cal-who">🔢 '+_calReq.count+' locks</span>':'')+'</div>';
+          h+='<div class="cal-bk"><span class="cal-time">'+item.time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(function(){var c=bk.nbLocks||(_calReq&&_calReq.count&&_calReq.count!=='?'?_calReq.count:'');return '<span class="cal-who">🔢 '+(c?c+' locks':'locks ?')+'</span>';})()+(bk.price?'<span class="cal-who">'+bk.price+'€</span>':'')+'</div>';
         } else {
           var pe=item.data;
           var col=pe.couleur||'#5BA873';

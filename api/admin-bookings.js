@@ -103,6 +103,37 @@ module.exports = async (req, res) => {
     r.bloque_suivant = nextFromTimes(configs[r.date_rdv], r.heure_rdv)
   }
 
+  // Nombre de locks (admin) : réservation -> sinon dernier devis de la même cliente (recherche directe en base, sans pagination)
+  if (isAdmin(req)) {
+    const today = new Date().toISOString().slice(0, 10)
+    const countOf = (txt) => { const m = String(txt || '').match(/(\d+)\s*locks/i); return m ? m[1] : null }
+    const need = []
+    for (const r of rows) {
+      let n = {}
+      try { n = JSON.parse(r.notes || '{}') || {} } catch (e) {}
+      const c = n.nbLocks || n.count || null
+      if (c) r.nb_locks = String(c)
+      else if (r.cliente_email && (!r.date_rdv || r.date_rdv >= today)) need.push(r)
+    }
+    const emails = [...new Set(need.map(r => (r.cliente_email || '').toLowerCase().trim()).filter(Boolean))]
+    for (const em of emails) {
+      try {
+        const q = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations?statut=eq.devis&cliente_email=ilike.${encodeURIComponent(em)}&select=notes&order=created_at.desc&limit=5`, {
+          headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` }
+        })
+        const dj = await q.json()
+        let found = null
+        for (const d of (Array.isArray(dj) ? dj : [])) {
+          let msg = d.notes || ''
+          try { const o = JSON.parse(msg); if (o && o.message) msg = o.message } catch (e) {}
+          found = countOf(msg)
+          if (found) break
+        }
+        if (found) need.filter(r => (r.cliente_email || '').toLowerCase().trim() === em).forEach(r => { r.nb_locks = found })
+      } catch (e) { console.error('[admin-bookings] nb locks:', e.message) }
+    }
+  }
+
   // Sans mot de passe admin : uniquement les créneaux occupés (aucune donnée cliente)
   if (!isAdmin(req)) return res.status(200).json(rows.map(r => ({ date_rdv: r.date_rdv, heure_rdv: r.heure_rdv, service: r.service, bloque_suivant: r.bloque_suivant || null })))
   res.status(200).json(rows)
