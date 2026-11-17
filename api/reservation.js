@@ -1,4 +1,5 @@
-const { nextSlot, blocksNext } = require('./_slots')
+const { nextSlot, blocksNext, daySlots, majorationOf } = require('./_slots')
+const { isAdmin } = require('./_auth')
 const nodemailer = require('nodemailer')
 
 function generateToken() {
@@ -94,15 +95,24 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, acompte, baseService, baseSize, optsData, curPhotos, inspoPhotos } = req.body
+  const { nom, prenom, email, service, date_rdv, heure_rdv, prix, prix_base, acompte, baseService, baseSize, optsData, curPhotos, inspoPhotos } = req.body
   const token = generateToken()
-  const prixStr = prix ? prix.toString().replace('€', '').trim() : null
-  const prixNum = parseFloat(prixStr) || 0
+  const slotsDuJour = await daySlots(date_rdv)
+
+  // Majoration du créneau (fêtes…) : relue côté serveur dans slots_config, jamais reprise du navigateur.
+  // Départ de locks / vanilles : c'est la majoration du créneau de départ qui s'applique.
+  // RDV créé à la main depuis l'admin (sans prix_base) : le prix saisi est gardé tel quel.
+  const manuelAdmin = prix_base === undefined && isAdmin(req)
+  const majoration = manuelAdmin ? 0 : majorationOf(slotsDuJour, heure_rdv)
+  const baseNum = parseFloat(String(prix_base !== undefined ? prix_base : (prix || '')).replace('€', '').trim()) || 0
+  const prixNum = manuelAdmin ? baseNum : baseNum + majoration
+  const prixStr = (prix || prix_base !== undefined) ? String(prixNum) : null
   const acompteNum = parseFloat(acompte) || 0
   const resteNum = Math.max(0, prixNum - acompteNum)
+  const majRow = majoration > 0 ? `<tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Majoration créneau</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>+${majoration}€</strong></td></tr>` : ''
 
   // Départ de locks / vanilles : le créneau suivant de la journée est bloqué aussi
-  const bloqueSuivant = blocksNext(service) ? await nextSlot(date_rdv, heure_rdv) : null
+  const bloqueSuivant = blocksNext(service) ? await nextSlot(date_rdv, heure_rdv, slotsDuJour) : null
 
   // Sauvegarder dans Supabase via REST
   const sbRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/reservations`, {
@@ -123,7 +133,7 @@ module.exports = async (req, res) => {
       statut: 'confirmé',
       acompte_paye: false,
       token_annulation: token,
-      notes: JSON.stringify({ baseService: baseService || null, baseSize: baseSize || null, opts: optsData || [], acompte: acompteNum, curPhotos: Array.isArray(curPhotos) ? curPhotos : [], inspoPhotos: Array.isArray(inspoPhotos) ? inspoPhotos : [], bloque_suivant: bloqueSuivant })
+      notes: JSON.stringify({ baseService: baseService || null, baseSize: baseSize || null, opts: optsData || [], acompte: acompteNum, curPhotos: Array.isArray(curPhotos) ? curPhotos : [], inspoPhotos: Array.isArray(inspoPhotos) ? inspoPhotos : [], bloque_suivant: bloqueSuivant, majoration })
     })
   })
   const sbData = await sbRes.json()
@@ -145,7 +155,7 @@ module.exports = async (req, res) => {
   const icsContent = dtstart ? buildIcs({
     uid,
     summary: (service || 'RDV') + ' — ' + clientLabel,
-    description: 'Cliente : ' + clientLabel + '\\nEmail : ' + (email || '—') + '\\nPrix : ' + prixNum + '€\\nAcompte : ' + acompteNum + '€',
+    description: 'Cliente : ' + clientLabel + '\\nEmail : ' + (email || '—') + (majoration > 0 ? '\\nMajoration créneau : +' + majoration + '€' : '') + '\\nPrix : ' + prixNum + '€\\nAcompte : ' + acompteNum + '€',
     dtstart,
     dtend,
   }) : null
@@ -163,6 +173,7 @@ module.exports = async (req, res) => {
           ${buildServiceRows(service, baseService, baseSize, optsData)}
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv || '—'}</td></tr>
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv || '—'}</td></tr>
+          ${majRow}
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${prixNum}€</td></tr>
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
           <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste à payer le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c;font-size:17px"><strong>${resteNum}€</strong></td></tr>
@@ -205,6 +216,7 @@ module.exports = async (req, res) => {
             ${buildServiceRows(service, baseService, baseSize, optsData)}
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv}</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv}</td></tr>
+            ${majRow}
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>${prixNum}€</strong></td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte payé</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
             <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;font-size:17px"><strong>${resteNum}€</strong></td></tr>
@@ -249,6 +261,7 @@ module.exports = async (req, res) => {
               ${buildServiceRows(service, baseService, baseSize, optsData)}
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Date</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${date_rdv || '—'}</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Heure</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${heure_rdv || '—'}</td></tr>
+              ${majRow}
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Prix total</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#c9a84c"><strong>${prixNum}€</strong></td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Acompte payé</strong></td><td style="padding:8px;border-bottom:1px solid #eee">−${acompteNum}€</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee"><strong>Reste le jour J</strong></td><td style="padding:8px;border-bottom:1px solid #eee;font-size:17px"><strong>${resteNum}€</strong></td></tr>

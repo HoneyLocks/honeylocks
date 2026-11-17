@@ -18,10 +18,9 @@ function nextFromTimes(times, heure) {
   return after[0] || null
 }
 
-// Heure du créneau qui suit `heure` le jour `date` (selon slots_config), ou null si c'est le dernier
-async function nextSlot(date, heure) {
-  if (!date || !heure) return null
-  let times = DEFAULT_TIMES
+// Créneaux configurés du jour `date` dans slots_config ([{time, on, majoration}]), ou null
+async function daySlots(date) {
+  if (!date) return null
   try {
     const r = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/slots_config?date=eq.${encodeURIComponent(date)}&select=slots`,
@@ -29,9 +28,23 @@ async function nextSlot(date, heure) {
     )
     const rows = await r.json()
     const slots = Array.isArray(rows) && rows[0] && Array.isArray(rows[0].slots) ? rows[0].slots : null
-    if (slots && slots.length) times = slots.map(s => s.time)
-  } catch (e) { console.error('[_slots] lecture slots_config:', e.message) }
-  return nextFromTimes(times, heure)
+    return slots && slots.length ? slots : null
+  } catch (e) { console.error('[_slots] lecture slots_config:', e.message); return null }
 }
 
-module.exports = { nextSlot, nextFromTimes, blocksNext, toMin, DEFAULT_TIMES }
+// Majoration (€) du créneau `heure` dans `slots` (0 si absent : anciens créneaux sans champ)
+function majorationOf(slots, heure) {
+  const cur = toMin(heure)
+  const s = (slots || []).find(x => cur !== null && toMin(x.time) === cur)
+  const m = s ? parseFloat(s.majoration) : 0
+  return m > 0 ? Math.round(m * 100) / 100 : 0
+}
+
+// Heure du créneau qui suit `heure` le jour `date` (selon slots_config), ou null si c'est le dernier
+async function nextSlot(date, heure, slots) {
+  if (!date || !heure) return null
+  if (slots === undefined) slots = await daySlots(date)
+  return nextFromTimes(slots ? slots.map(s => s.time) : DEFAULT_TIMES, heure)
+}
+
+module.exports = { nextSlot, nextFromTimes, blocksNext, daySlots, majorationOf, toMin, DEFAULT_TIMES }

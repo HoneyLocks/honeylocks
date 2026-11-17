@@ -238,6 +238,8 @@ textarea{resize:vertical;min-height:66px}
 .slot.selected{background:var(--honey);color:var(--dark);border-color:var(--honey);font-weight:500}
 .slot.taken{opacity:.28;text-decoration:line-through;cursor:not-allowed}
 .slot.dm{opacity:.55;cursor:pointer;font-size:12.5px}
+.slot .smaj{display:block;font-size:10.5px;font-weight:600;color:var(--honey);margin-top:3px;letter-spacing:.2px}
+.slot.selected .smaj{color:var(--dark)}
 .dm-modal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;padding:24px}
 .dm-modal.open{display:flex}
 .dm-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
@@ -301,6 +303,15 @@ textarea{resize:vertical;min-height:66px}
 .stog.off{background:rgba(255,255,255,.06);color:var(--dim)}
 .stime{flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-family:inherit;font-size:13px;text-align:center;min-width:0}
 .sdel{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.smaj-in{width:62px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 4px;color:var(--text);font-family:inherit;font-size:13px;text-align:center}
+.smaj-in.on{border-color:var(--honey);color:var(--honey);background:rgba(201,168,76,.12)}
+.smaj-bulk{background:rgba(201,168,76,.07);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px}
+.smaj-bulk h4{margin:0 0 4px;font-size:13px;color:var(--honey-light)}
+.smaj-bulk p{margin:0 0 10px;font-size:11.5px;color:var(--dim);line-height:1.5}
+.smaj-bulk .row{display:flex;gap:8px;margin-bottom:8px}
+.smaj-bulk label{flex:1;min-width:0;font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:4px}
+.smaj-bulk input{width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text);font-family:inherit;font-size:13px;min-width:0}
+.smaj-bulk button{width:100%;border:none;border-radius:8px;padding:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:var(--honey);color:var(--dark)}
 .cal-day{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
 .cal-date{min-width:88px;font-size:11px;font-weight:600;color:var(--honey);letter-spacing:.3px;padding-top:3px;flex-shrink:0}
 .cal-date.empty{color:rgba(245,233,200,.2)}
@@ -674,7 +685,7 @@ textarea{resize:vertical;min-height:66px}
     <h2>Récapitulatif</h2><p class="sub">Verse ton acompte pour bloquer le créneau</p>
     <div class="recap" id="recap"></div>
     <div class="note"><strong>Acompte obligatoire.</strong> Le créneau n'est confirmé qu'une fois l'acompte reçu. Il est déduit du prix total le jour J. 🤍</div>
-    <div class="pp-box">Tu seras redirigée vers PayPal pour régler ton acompte de <strong id="pp-amount"></strong>. Merci d'indiquer ton nom Instagram, la date et l'heure de ton RDV en description (sélectionner "Entre proches").</div>
+    <div class="pp-box">Tu seras redirigée vers PayPal pour régler ton acompte de <strong id="pp-amount"></strong>.<span id="pp-maj"></span> Merci d'indiquer ton nom Instagram, la date et l'heure de ton RDV en description (sélectionner "Entre proches").</div>
     <div class="brow"><button class="btn ghost" onclick="goSub('vslot',3)">Retour</button><button class="btn pp" onclick="openPayModal()">Payer l'acompte · PayPal 🤍</button></div>
   </div>
 
@@ -778,7 +789,7 @@ textarea{resize:vertical;min-height:66px}
 <script>
 var ACOMPTE_PROMO=15,ACOMPTE_DEVIS=20;
 var PAYPAL='https://www.paypal.me/loveloveleM'; /* lien PayPal.me de Maïna */
-var S={id:null,name:null,type:null,base:0,size:null,technique:null,opts:[],optTotal:0,price:0,acompte:15,slot:null,slotIso:null,clientInsta:null,clientEmail:null,
+var S={id:null,name:null,type:null,base:0,size:null,technique:null,opts:[],optTotal:0,price:0,acompte:15,slot:null,slotIso:null,maj:0,clientInsta:null,clientEmail:null,
   inspo:false,fulaniFront:null,fulaniBack:null,sansCoif:false,
   curPhotos:[],inspoPhotos:[],
   reqs:[],
@@ -1123,9 +1134,9 @@ function buildSlots(){
         avail.forEach(function(s){
           if(isDm){
             var dmType=iso===isoToday?'today':'tomorrow';
-            h+='<div class="slot dm" onclick="dmSlot(\''+dmType+'\')">💬 '+s.time+'<\/div>';
+            h+='<div class="slot dm" onclick="dmSlot(\''+dmType+'\')">💬 '+s.time+_majTag(s)+'<\/div>';
           } else {
-            h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+'<\/div>';
+            h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+_majTag(s)+'<\/div>';
           }
         });
         h+='</div></div>';
@@ -1160,6 +1171,10 @@ function buildSlots(){
     _render(blockedDates,configs,booked);
   });
 }
+/* Majoration d'un créneau (période des fêtes…) : champ "majoration" en € dans slots_config, 0 si absent */
+function _majOf(s){var m=s?parseFloat(s.majoration):0;return m>0?Math.round(m*100)/100:0;}
+function _majTag(s){var m=_majOf(s);return m?'<span class="smaj">+'+m+'€<\/span>':'';}
+function _slotMaj(iso,time){var s=(S.slots[iso]||[]).filter(function(x){return _toMin(x.time)===_toMin(time);})[0];return _majOf(s);}
 function _toMin(t){var m=/^(\d{1,2}):(\d{2})/.exec(t||'');return m?parseInt(m[1],10)*60+parseInt(m[2],10):null;}
 function backFromSlot(){if(S.type==='devis')goSub('vcheck',2);else goSub('vopt',2);}
 var DM_MSGS={
@@ -1168,7 +1183,7 @@ var DM_MSGS={
 };
 function dmSlot(type){document.getElementById('dm-modal-txt').innerHTML=DM_MSGS[type]||DM_MSGS.today;document.getElementById('dm-modal').classList.add('open');}
 function closeDmModal(){document.getElementById('dm-modal').classList.remove('open');}
-function pickSlot(el,day,time,iso){document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected')});el.classList.add('selected');S.slot=day+' à '+time;S.slotIso=iso||null;setTimeout(toRecap,80);}
+function pickSlot(el,day,time,iso){document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected')});el.classList.add('selected');S.slot=day+' à '+time;S.slotIso=iso||null;S.maj=_slotMaj(iso,time);setTimeout(toRecap,80);}
 function toRecap(){
   if(S.type!=='devis'){
     document.getElementById('c-insta').value='';
@@ -1204,11 +1219,14 @@ function _buildRecap(){
   if(S.sansCoif)h+='<div class="rrow"><span>Sans coiffure protectrice</span><span class="v">−5€</span></div>';
   h+='<div class="rrow"><span>Créneau</span><span class="v">'+S.slot+'</span></div>';
   if(S.clientInsta)h+='<div class="rrow"><span>Instagram</span><span class="v">@'+S.clientInsta+'</span></div>';
-  h+='<div class="rrow"><span>Prix total</span><span class="v">'+S.price+'€</span></div>';
+  var _maj=S.maj||0,_tot=S.price+_maj;
+  if(_maj)h+='<div class="rrow"><span>Majoration créneau</span><span class="v">+'+_maj+'€</span></div>';
+  h+='<div class="rrow"><span>Prix total</span><span class="v">'+_tot+'€</span></div>';
   h+='<div class="rrow"><span>Acompte PayPal</span><span class="rtotal">'+S.acompte+'€</span></div>';
-  h+='<div class="rrow"><span>Reste le jour J</span><span class="v">'+(S.price-S.acompte)+'€</span></div>';
+  h+='<div class="rrow"><span>Reste le jour J</span><span class="v">'+(_tot-S.acompte)+'€</span></div>';
   document.getElementById('recap').innerHTML=h;
   document.getElementById('pp-amount').textContent=S.acompte+'€';
+  var _ppMaj=document.getElementById('pp-maj');if(_ppMaj)_ppMaj.innerHTML=_maj?'<br>La majoration de créneau (+'+_maj+'€) se règle le jour J avec le reste.':'';
   goSub('vrecap',4);
 }
 function openPayModal(){document.getElementById('payModal').classList.add('open');}
@@ -1247,7 +1265,8 @@ function pay(){
       service:_fullSvc,
       date_rdv:dateRdv,
       heure_rdv:heureRdv,
-      prix:S.price+'€',
+      prix:(S.price+(S.maj||0))+'€',
+      prix_base:S.price,
       acompte:S.acompte+'€',
       baseService:_baseSvc,
       baseSize:_baseSize,
@@ -1257,7 +1276,7 @@ function pay(){
     })
   }).catch(function(e){console.log('Erreur envoi reservation:',e)});
 }
-function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.size=null;S.technique=null;S.opts=[];S.optTotal=0;S.inspo=false;S.fulaniFront=null;S.fulaniBack=null;S.clientInsta=null;S.clientEmail=null;S.sansCoif=false;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';goSub('v1',1)}
+function resetRes(){S.id=null;S.type=null;S.slot=null;S.slotIso=null;S.maj=0;S.size=null;S.technique=null;S.opts=[];S.optTotal=0;S.inspo=false;S.fulaniFront=null;S.fulaniBack=null;S.clientInsta=null;S.clientEmail=null;S.sansCoif=false;S.curPhotos=[];S.inspoPhotos=[];document.querySelectorAll('.svc').forEach(function(s){s.classList.remove('selected')});var _b1=document.getElementById('b1');if(_b1)_b1.disabled=true;document.getElementById('d-insta').value='';document.getElementById('d-email').value='';document.getElementById('c-insta').value='';document.getElementById('c-email').value='';document.getElementById('d-count').value='';document.getElementById('d-notes').value='';goSub('v1',1)}
 
 /* ADMIN */
 function _slotLabel(dateStr,heureStr){var joursAbbr=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var moisFr=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];if(!dateStr)return heureStr||'?';var p=dateStr.split('-');var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));return joursAbbr[d.getDay()]+' '+d.getDate()+' '+moisFr[d.getMonth()]+(heureStr?' à '+heureStr:'');}
@@ -1344,7 +1363,7 @@ function loadAdminBookings(){
       var bkNotes={};try{bkNotes=JSON.parse(row.notes||'{}')||{};}catch(e){}
       var ac=parseFloat(bkNotes.acompte);
       if(!(ac>0))ac=row.service&&(row.service.includes('Retwist')||row.service.includes('Démêl')||row.service.includes('Départ'))?20:15;
-      list.push({id:row.id,service:formatService(row.service),slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',nbLocks:row.nb_locks||'',acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
+      list.push({id:row.id,service:formatService(row.service),slot:_slotLabel(row.date_rdv,row.heure_rdv),slotIso:row.date_rdv||null,heureIso:row.heure_rdv||'',price:prixNum,acompte:ac,status:'confirmed',insta:row.cliente_nom||'',email:row.cliente_email||'',nbLocks:row.nb_locks||'',maj:parseFloat(bkNotes.majoration)>0?parseFloat(bkNotes.majoration):0,acomptePaye:row.acompte_paye||false,curPhotos:Array.isArray(bkNotes.curPhotos)?bkNotes.curPhotos:[],inspoPhotos:Array.isArray(bkNotes.inspoPhotos)?bkNotes.inspoPhotos:[]});
     });
     S.bookings=list;
     S.rdv=S.bookings.length;
@@ -1381,7 +1400,7 @@ function refreshAdmin(){
   var _futureBks=S.bookings.slice().filter(function(bk){return!bk.slotIso||bk.slotIso>=_bkTodayIso;}).sort(function(a,b2){if(a.slotIso!==b2.slotIso)return(a.slotIso||'').localeCompare(b2.slotIso||'');return((a.slot||'').split(' à ')[1]||'').localeCompare(((b2.slot||'').split(' à ')[1])||'');});
   _futureBks.forEach(function(bk){
     var bkReste=Math.max(0,bk.price-bk.acompte);
-    var bkMeta=bk.slot+' · '+bk.price+'€ total · acompte '+bk.acompte+'€ · reste '+bkReste+'€';
+    var bkMeta=bk.slot+' · '+bk.price+'€ total'+(bk.maj?' (dont majoration +'+bk.maj+'€)':'')+' · acompte '+bk.acompte+'€ · reste '+bkReste+'€';
     var bkExtra='';
     if(bk.insta)bkExtra+='<div class="rqd">📸 @'+bk.insta+'</div>';
     if(bk.email)bkExtra+='<div class="rqd">✉️ '+bk.email+'</div>';
@@ -1476,7 +1495,7 @@ function renderCalAdmin(){
         if(item.kind==='bk'){
           var bk=item.data;
           var _calReq=S.reqs.filter(function(x){return x.email&&bk.email&&x.email.toLowerCase()===bk.email.toLowerCase();})[0];
-          h+='<div class="cal-bk"><span class="cal-time">'+item.time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(function(){var c=bk.nbLocks||(_calReq&&_calReq.count&&_calReq.count!=='?'?_calReq.count:'');return '<span class="cal-who">🔢 '+(c?c+' locks':'locks ?')+'</span>';})()+(bk.price?'<span class="cal-who">'+bk.price+'€</span>':'')+'</div>';
+          h+='<div class="cal-bk"><span class="cal-time">'+item.time+'</span><span class="cal-svc">'+bk.service+'</span>'+(bk.insta?'<span class="cal-who">@'+bk.insta+'</span>':'')+(function(){var c=bk.nbLocks||(_calReq&&_calReq.count&&_calReq.count!=='?'?_calReq.count:'');return '<span class="cal-who">🔢 '+(c?c+' locks':'locks ?')+'</span>';})()+(bk.price?'<span class="cal-who">'+bk.price+'€'+(bk.maj?' · majoré +'+bk.maj+'€':'')+'</span>':'')+'</div>';
         } else {
           var pe=item.data;
           var col=pe.couleur||'#5BA873';
@@ -1506,6 +1525,10 @@ function _doRenderSlotsAdmin(){
   h+='<span style="font-size:14px;font-weight:600;color:var(--honey-light)">'+moisFrLong[_aCalMonth]+' '+_aCalYear+'</span>';
   h+='<button class="aday-add" onclick="nextCalMonth()" style="padding:5px 16px;font-size:18px">&#8250;</button>';
   h+='</div>';
+  h+='<div class="smaj-bulk"><h4>Majoration en lot</h4><p>Applique un montant à plusieurs jours d\'un coup (ex. du 24 au 31 déc.). Laisse « Créneaux » vide pour tous les créneaux du jour. Montant 0 = retirer la majoration. Champ « +€ » à droite de chaque créneau pour le réglage au cas par cas.</p>';
+  h+='<div class="row"><label>Du<input type="date" id="mb-from"></label><label>Au<input type="date" id="mb-to"></label></div>';
+  h+='<div class="row"><label>Créneaux<input type="text" id="mb-times" placeholder="ex. 14:30, 18:30"></label><label>Montant €<input type="number" id="mb-amount" min="0" step="1" inputmode="numeric" placeholder="10"></label></div>';
+  h+='<button onclick="applyMajBulk()">Appliquer la majoration</button></div>';
   var d=new Date(firstDay.getTime());
   while(d<=lastDay){
     var iso=isoFmt(d);
@@ -1517,6 +1540,8 @@ function _doRenderSlotsAdmin(){
       h+='<div class="sitem">';
       h+='<button class="stog '+(s.on?'on':'off')+'" onclick="toggleSlotDay(\''+iso+'\','+j+')">'+(s.on?'ON':'OFF')+'<\/button>';
       h+='<input class="stime" type="text" value="'+s.time+'" maxlength="5" onchange="updateSlotDay(\''+iso+'\','+j+',this.value)">';
+      var _m=_majOf(s);
+      h+='<input class="smaj-in'+(_m?' on':'')+'" type="number" min="0" step="1" inputmode="numeric" placeholder="+€" title="Majoration (€)" value="'+(_m||'')+'" onchange="updateSlotMaj(\''+iso+'\','+j+',this)">';
       h+='<button class="sdel" onclick="removeSlotDay(\''+iso+'\','+j+')">&#215;<\/button>';
       h+='<\/div>';
     });
@@ -1546,6 +1571,37 @@ function _saveSlotToSupabase(iso){
 function toggleSlotDay(iso,j){S.slots[iso][j].on=!S.slots[iso][j].on;_saveSlotToSupabase(iso);_doRenderSlotsAdmin();}
 function updateSlotDay(iso,j,val){if(S.slots[iso]&&S.slots[iso][j]){S.slots[iso][j].time=val.trim();_saveSlotToSupabase(iso);}}
 function removeSlotDay(iso,j){if(S.slots[iso]){S.slots[iso].splice(j,1);_saveSlotToSupabase(iso);_doRenderSlotsAdmin();}}
+function updateSlotMaj(iso,j,el){
+  if(!S.slots[iso]||!S.slots[iso][j])return;
+  var v=parseFloat(String(el.value).replace(',','.'));v=v>0?Math.round(v*100)/100:0;
+  S.slots[iso][j].majoration=v;el.value=v||'';el.classList.toggle('on',v>0);
+  _saveSlotToSupabase(iso);
+}
+function applyMajBulk(){
+  var from=document.getElementById('mb-from').value,to=document.getElementById('mb-to').value||from;
+  var v=parseFloat(String(document.getElementById('mb-amount').value).replace(',','.'));v=v>0?Math.round(v*100)/100:0;
+  var times=document.getElementById('mb-times').value.split(/[,;\s]+/).map(function(t){return _toMin(t);}).filter(function(m){return m!==null;});
+  if(!from){alert('Choisis au moins une date de début.');return;}
+  if(to<from){alert('La date de fin est avant la date de début.');return;}
+  if(document.getElementById('mb-amount').value===''){alert('Indique un montant (0 pour retirer).');return;}
+  /* relit les créneaux à jour avant d'écrire, pour ne rien écraser */
+  fetch('/api/slots',{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return[];}).then(function(configs){
+    var cfg={};(configs||[]).forEach(function(c){if(c.date&&Array.isArray(c.slots))cfg[c.date]=c.slots;});
+    var p1=from.split('-'),p2=to.split('-');
+    var d=new Date(+p1[0],p1[1]-1,+p1[2]),end=new Date(+p2[0],p2[1]-1,+p2[2]);
+    var n=0,days=0;
+    while(d<=end){
+      var iso=isoFmt(d);
+      var slots=cfg[iso]||(['10:30','14:30','18:30'].map(function(t){return{time:t,on:false};}));
+      var hit=0;
+      slots.forEach(function(s){if(!times.length||times.indexOf(_toMin(s.time))!==-1){s.majoration=v;hit++;}});
+      if(hit){S.slots[iso]=slots;_saveSlotToSupabase(iso);n+=hit;days++;}
+      d.setDate(d.getDate()+1);
+    }
+    _doRenderSlotsAdmin();
+    alert(n?('Majoration '+(v?'+'+v+'€':'retirée')+' sur '+n+' créneau(x), '+days+' jour(s) ✅'):'Aucun créneau trouvé pour ces heures.');
+  });
+}
 function addSlotDay(iso){if(!S.slots[iso])S.slots[iso]=[];S.slots[iso].push({time:'',on:true});_doRenderSlotsAdmin();}
 
 function sendQuote(id){
