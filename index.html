@@ -240,6 +240,8 @@ textarea{resize:vertical;min-height:66px}
 .slot.dm{opacity:.55;cursor:pointer;font-size:12.5px}
 .slot .smaj{display:block;font-size:10.5px;font-weight:600;color:var(--honey);margin-top:3px;letter-spacing:.2px}
 .slot.selected .smaj{color:var(--dark)}
+.sday-l .sday-maj{display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid var(--honey);border-radius:20px;font-size:9.5px;letter-spacing:.8px;color:var(--honey-light);background:rgba(201,168,76,.1);vertical-align:1px}
+.slot.maj{border-color:rgba(201,168,76,.55)}
 .dm-modal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;padding:24px}
 .dm-modal.open{display:flex}
 .dm-modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
@@ -1130,13 +1132,14 @@ function buildSlots(){
       }
       var isDm=(iso===isoToday)||(iso===isoTomorrow&&after20);
       if(avail.length){
-        h+='<div class="sday"><div class="sday-l">'+label+'</div><div class="sgrid">';
+        var _dayMaj=avail.some(function(s){return _majOf(s)>0;});
+        h+='<div class="sday"><div class="sday-l">'+label+(_dayMaj?'<span class="sday-maj">✦ Hors planning · tarif majoré<\/span>':'')+'</div><div class="sgrid">';
         avail.forEach(function(s){
           if(isDm){
             var dmType=iso===isoToday?'today':'tomorrow';
-            h+='<div class="slot dm" onclick="dmSlot(\''+dmType+'\')">💬 '+s.time+_majTag(s)+'<\/div>';
+            h+='<div class="slot dm'+(_majOf(s)?' maj':'')+'" onclick="dmSlot(\''+dmType+'\')">💬 '+s.time+_majTag(s)+'<\/div>';
           } else {
-            h+='<div class="slot" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+_majTag(s)+'<\/div>';
+            h+='<div class="slot'+(_majOf(s)?' maj':'')+'" onclick="pickSlot(this,\''+label+'\',\''+s.time+'\',\''+iso+'\')">'+ s.time+_majTag(s)+'<\/div>';
           }
         });
         h+='</div></div>';
